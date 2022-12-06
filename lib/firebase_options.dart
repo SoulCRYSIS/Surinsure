@@ -53,11 +53,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBEqZsIvNjUg1k8-vzMGUO-FPYUn9ERu9g',
-    appId: '1:345876553323:web:abed5e68b59329651c1b2e',
-    messagingSenderId: '345876553323',
-    projectId: 'woot-8af03',
-    authDomain: 'woot-8af03.firebaseapp.com',
-    storageBucket: 'woot-8af03.appspot.com',
+    apiKey: 'AIzaSyBo_vwEyTkI_K3zzul2XHGtr8wuxPKqMTA',
+    appId: '1:706653313029:web:10ceb371435b0dcafc646c',
+    messagingSenderId: '706653313029',
+    projectId: 'surinsure-156a5',
+    authDomain: 'surinsure-156a5.firebaseapp.com',
+    storageBucket: 'surinsure-156a5.appspot.com',
   );
 }

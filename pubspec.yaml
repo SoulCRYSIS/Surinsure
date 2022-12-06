@@ -37,6 +37,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   firebase_core: ^2.3.0
+  firebase_auth: ^4.1.5
 
 dev_dependencies:
   flutter_test:
@@ -90,3 +91,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+  fonts:
+  - family: IBMPlexSansThai
+    fonts:
+      - asset: assets/fonts/IBMPlexSansThai-Bold.ttf
+      - asset: assets/fonts/IBMPlexSansThai-Medium.ttf
+      - asset: assets/fonts/IBMPlexSansThai-Regular.ttf
+      - asset: assets/fonts/IBMPlexSansThai-Bold.ttf
+      - asset: assets/fonts/IBMPlexSansThai-SemiBold.ttf
+      - asset: assets/fonts/IBMPlexSansThai-Text.ttf
