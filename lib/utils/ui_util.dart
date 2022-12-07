@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'connection_util.dart';
 
 class UiUtil {
+  UiUtil._();
+
   static Future<void> loadingScreen(
     BuildContext context, {
     required int timeoutSecond,
@@ -16,7 +18,9 @@ class UiUtil {
           child: SizedBox(
             width: 50,
             height: 50,
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(
+              color: Colors.indigo,
+            ),
           ),
         ),
       ),
@@ -26,5 +30,21 @@ class UiUtil {
     } finally {
       Navigator.pop(context);
     }
+  }
+
+  static void errorSnackbar(
+    BuildContext context,
+    String text,
+  ) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      width: 300,
+      behavior: SnackBarBehavior.floating,
+      content: Text(
+        text,
+        style: const TextStyle(color: Colors.white),
+        textAlign: TextAlign.center,
+      ),
+      backgroundColor: Theme.of(context).errorColor,
+    ));
   }
 }

@@ -15,5 +15,5 @@ class ConnectionUtil {
 
 class ConnectionFailedException implements Exception {
   @override
-  String toString() => 'Failed to connect to server';
+  String toString() => 'การเชื่อมต่อขัดข้อง กรุณาตรวจสอบอินเตอร์เนต';
 }
