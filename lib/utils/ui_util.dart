@@ -32,10 +32,11 @@ class UiUtil {
     }
   }
 
-  static void errorSnackbar(
+  static void snackbar(
     BuildContext context,
-    String text,
-  ) {
+    String text, {
+    bool isError = true,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       width: 300,
       behavior: SnackBarBehavior.floating,
@@ -44,7 +45,7 @@ class UiUtil {
         style: const TextStyle(color: Colors.white),
         textAlign: TextAlign.center,
       ),
-      backgroundColor: Theme.of(context).errorColor,
+      backgroundColor: isError ? Theme.of(context).errorColor : null,
     ));
   }
 }

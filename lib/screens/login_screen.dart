@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:woot/utils/ui_util.dart';
 
-import 'main_screen.dart';
+import 'menu_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // ignore: use_build_context_synchronously
       Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => const MainScreen(),
+        builder: (context) => const MenuScreen(),
       ));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'invalid-email') {

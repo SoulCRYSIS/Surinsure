@@ -46,7 +46,7 @@ class _InsuranceFormScreenState extends State<InsuranceFormScreen> {
         .collection('insurances')
         .doc(insuranceNumber);
     if ((await docRef.get()).exists) {
-      UiUtil.errorSnackbar(context, 'เลขที่กรมธรรม์ซ้ำ กรุณาตรวจสอบอีกครั้ง');
+      UiUtil.snackbar(context, 'เลขที่กรมธรรม์ซ้ำ กรุณาตรวจสอบอีกครั้ง');
       return;
     }
 
@@ -74,9 +74,9 @@ class _InsuranceFormScreenState extends State<InsuranceFormScreen> {
         }(),
       );
     } on ConnectionFailedException catch (e) {
-      UiUtil.errorSnackbar(context, e.toString());
+      UiUtil.snackbar(context, e.toString());
     } catch (e, stacktrace) {
-      UiUtil.errorSnackbar(context, e.toString());
+      UiUtil.snackbar(context, e.toString());
       debugPrintStack(stackTrace: stacktrace);
     }
   }
@@ -84,65 +84,62 @@ class _InsuranceFormScreenState extends State<InsuranceFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: 
-          BlockBorder(
-            child: Column(
+      body: BlockBorder(
+        child: Column(
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    const TopicText('เลขที่กรมธรรม์'),
-                    spacing,
-                    TextInputField(
-                      width: 250,
-                      onSaved: (value) => insuranceNumber = value!,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'จำเป็น';
-                        }
-                        if (value.contains('\\') || value.contains('.')) {
-                          return 'รูปแบบไม่ถูกต้อง';
-                        }
-                        return null;
-                      },
-                    ),
-                    const TopicText('ประเภท'),
-                    spacing,
-                    DropdownInputField(
-                      width: 150,
-                      hint: 'เลือกประเภท',
-                      value: insuranceType,
-                      onChanged: (value) => insuranceType = value!,
-                      items: allInsuranceTypes,
-                    ),
-                  ],
+                const TopicText('เลขที่กรมธรรม์'),
+                spacing,
+                TextInputField(
+                  width: 250,
+                  onSaved: (value) => insuranceNumber = value!,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'จำเป็น';
+                    }
+                    if (value.contains('\\') || value.contains('.')) {
+                      return 'รูปแบบไม่ถูกต้อง';
+                    }
+                    return null;
+                  },
                 ),
-                spacingVertical,
-                Row(
-                  children: [
-                    const TopicText('หมายเหตุ'),
-                    spacing,
-                    TextInputField(
-                      width: 350,
-                      onSaved: (value) => note = value!,
-                      validator: (value) {
-                        if (value != null && value.length > 200) {
-                          return 'สูงสุด 200 ตัวอักษร';
-                        }
-                        return null;
-                      },
-                    ),
-                    const TopicText('แนบไฟล์'),
-                    spacing,
-                    FileUploader(
-                      onChanged: (value) => files = value,
-                    ),
-                  ],
+                const TopicText('ประเภท'),
+                spacing,
+                DropdownInputField(
+                  width: 150,
+                  hint: 'เลือกประเภท',
+                  value: insuranceType,
+                  onChanged: (value) => insuranceType = value!,
+                  items: allInsuranceTypes,
                 ),
               ],
             ),
-          ),
-        
-      
+            spacingVertical,
+            Row(
+              children: [
+                const TopicText('หมายเหตุ'),
+                spacing,
+                TextInputField(
+                  width: 350,
+                  onSaved: (value) => note = value!,
+                  validator: (value) {
+                    if (value != null && value.length > 200) {
+                      return 'สูงสุด 200 ตัวอักษร';
+                    }
+                    return null;
+                  },
+                ),
+                const TopicText('แนบไฟล์'),
+                spacing,
+                FileUploader(
+                  onChanged: (value) => files = value,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

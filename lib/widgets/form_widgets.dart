@@ -21,12 +21,14 @@ class TopicText extends StatelessWidget {
 class TextInputField extends StatelessWidget {
   const TextInputField({
     this.label,
+    this.initialValue,
     required this.width,
     required this.onSaved,
     this.validator,
     super.key,
   });
 
+  final String? initialValue;
   final String? label;
   final double width;
   final void Function(String? value) onSaved;
@@ -37,6 +39,7 @@ class TextInputField extends StatelessWidget {
     return SizedBox(
       width: width,
       child: TextFormField(
+        initialValue: initialValue,
         decoration: InputDecoration(labelText: label),
         onSaved: onSaved,
         validator: validator,
@@ -172,22 +175,35 @@ class _FileUploaderState extends State<FileUploader> {
 }
 
 class BlockBorder extends StatelessWidget {
-  const BlockBorder({required this.child, this.width = 800, super.key});
+  const BlockBorder({required this.child, this.width = 840, super.key});
 
   final Widget child;
   final double width;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-        margin: const EdgeInsets.all(10),
-        width: width,
-        decoration: BoxDecoration(
-          border: Border.all(),
-          borderRadius: const BorderRadius.all(Radius.circular(20)),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+      margin: const EdgeInsets.all(10),
+      width: width,
+      decoration: BoxDecoration(
+        border: Border.all(),
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+      ),
+      child: child,
+    );
+  }
+}
+
+class BidirectionScroll extends StatelessWidget {
+  const BidirectionScroll({required this.child, super.key});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
         child: child,
       ),
     );

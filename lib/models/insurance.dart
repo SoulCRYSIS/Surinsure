@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 part 'insurance.g.dart';
 
@@ -22,4 +23,17 @@ class Insurance {
   factory Insurance.fromJson(Map<String, dynamic> json) =>
       _$InsuranceFromJson(json);
   Map<String, dynamic> toJson() => _$InsuranceToJson(this);
+}
+
+class InsuranceDocument {
+  final Insurance data;
+  final String id;
+  final DocumentReference<Map<String, dynamic>> reference;
+
+  InsuranceDocument(this.data, this.id, this.reference);
+
+  InsuranceDocument.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc)
+      : data = Insurance.fromJson(doc.data()!),
+        id = doc.id,
+        reference = doc.reference;
 }

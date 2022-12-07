@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 part 'customer.g.dart';
 
@@ -35,4 +36,17 @@ class Customer {
   factory Customer.fromJson(Map<String, dynamic> json) =>
       _$CustomerFromJson(json);
   Map<String, dynamic> toJson() => _$CustomerToJson(this);
+}
+
+class CustomerDocument {
+  final Customer data;
+  final String id;
+  final DocumentReference<Map<String, dynamic>> reference;
+
+  CustomerDocument(this.data, this.id, this.reference);
+
+  CustomerDocument.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc)
+      : data = Customer.fromJson(doc.data()!),
+        id = doc.id,
+        reference = doc.reference;
 }

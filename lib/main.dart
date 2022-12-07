@@ -1,15 +1,22 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:woot/screens/main_screen.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:provider/provider.dart';
+import 'package:woot/screens/menu_screen.dart';
+import 'package:woot/utils/ui_util.dart';
 
+import 'constants/firestore_collection.dart';
 import 'firebase_options.dart';
+import 'models/customer.dart';
+import 'models/insurance.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(Phoenix(child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -17,8 +24,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    final materialApp = MaterialApp(
         title: 'Surinsure',
+        scrollBehavior: const MaterialScrollBehavior()
+            .copyWith(dragDevices: {PointerDeviceKind.mouse}),
         theme: ThemeData(
           primarySwatch: Colors.blue,
           fontFamily: "IBMPlexSansThai",
@@ -28,6 +37,9 @@ class MyApp extends StatelessWidget {
             headline1: TextStyle(
                 fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
           ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                  textStyle: const TextStyle(fontSize: 16))),
           inputDecorationTheme: InputDecorationTheme(
             isDense: true,
             isCollapsed: true,
@@ -42,10 +54,38 @@ class MyApp extends StatelessWidget {
             behavior: SnackBarBehavior.floating,
           ),
         ),
-        home: const MainScreen()
+        home: const MenuScreen()
         // FirebaseAuth.instance.currentUser != null
         //     ? const MainScreen()
         //     : const LoginScreen(),
         );
+
+    return MultiProvider(
+      providers: [
+        StreamProvider<List<CustomerDocument>?>(
+          initialData: null,
+          create: (context) => FirestoreCollection.customers
+              .snapshots()
+              .asyncMap((event) =>
+                  event.docs.map((e) => CustomerDocument.fromDoc(e)).toList()),
+          catchError: (context, error) {
+            UiUtil.snackbar(context, error.toString());
+            return null;
+          },
+        ),
+        StreamProvider<List<InsuranceDocument>?>(
+          initialData: null,
+          create: (context) => FirestoreCollection.insurances
+              .snapshots()
+              .asyncMap((event) =>
+                  event.docs.map((e) => InsuranceDocument.fromDoc(e)).toList()),
+          catchError: (context, error) {
+            UiUtil.snackbar(context, error.toString());
+            return null;
+          },
+        ),
+      ],
+      child: materialApp,
+    );
   }
 }

@@ -45,6 +45,8 @@ dependencies:
   json_serializable: ^6.5.4
   build_runner: ^2.3.2
   json_annotation: ^4.7.0
+  provider: ^6.0.4
+  flutter_phoenix: ^1.1.0
 
 dev_dependencies:
   flutter_test:
