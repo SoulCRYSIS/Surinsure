@@ -12,7 +12,6 @@ class Insurance {
 
   Insurance({
     required this.customerId,
-    
     required this.insuranceType,
     required this.insuranceNumber,
     required this.note,
@@ -23,6 +22,9 @@ class Insurance {
   factory Insurance.fromJson(Map<String, dynamic> json) =>
       _$InsuranceFromJson(json);
   Map<String, dynamic> toJson() => _$InsuranceToJson(this);
+
+  late final List<String> filesActualName =
+      filesName.map((e) => e.substring(insuranceNumber.length)).toList();
 }
 
 class InsuranceDocument {

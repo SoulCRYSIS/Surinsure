@@ -1,5 +1,8 @@
+import 'package:dropdown_plus/dropdown_plus.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class TopicText extends StatelessWidget {
   const TopicText(this.text, {super.key});
@@ -31,6 +34,7 @@ class TextInputField extends StatelessWidget {
   final String? initialValue;
   final String? label;
   final double width;
+
   final void Function(String? value) onSaved;
   final String? Function(String? value)? validator;
 
@@ -53,45 +57,77 @@ class DropdownInputField extends StatelessWidget {
     this.hint,
     this.value,
     this.label,
-    this.state,
+    this.isSearchable = false,
+    this.validator,
     required this.width,
     required this.items,
     required this.onChanged,
     super.key,
-  }) : assert(hint == null || label == null);
-  final GlobalKey<FormFieldState>? state;
+  });
   final List<String> items;
   final String? hint;
   final String? label;
   final String? value;
   final double width;
+  final bool isSearchable;
   final void Function(String? value) onChanged;
+  final String? Function(String? value)? validator;
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController textEditingController =
+        TextEditingController(text: value);
     return SizedBox(
       width: width,
-      child: DropdownButtonFormField<String>(
-        key: state,
-        value: value,
-        decoration: InputDecoration(labelText: label),
-        hint: hint == null ? null : Text(hint!),
-        items: items
-            .map(
-              (e) => DropdownMenuItem(
-                value: e,
-                child: Text(e),
+      child: isSearchable
+          ? Focus(
+              skipTraversal: true,
+              onFocusChange: (value) {
+                if (!value) {
+                  onChanged(textEditingController.text);
+                }
+              },
+              child: TypeAheadFormField(
+                animationDuration: const Duration(),
+                debounceDuration: const Duration(milliseconds: 100),
+                textFieldConfiguration: TextFieldConfiguration(
+                  controller: textEditingController,
+                  decoration: InputDecoration(labelText: label),
+                ),
+                suggestionsCallback: (pattern) =>
+                    items.where((item) => item.contains(pattern)),
+                itemBuilder: (context, itemData) => ListTile(
+                  title: Text(itemData),
+                ),
+                onSuggestionSelected: (suggestion) {
+                  onChanged(suggestion);
+                  textEditingController.text = suggestion;
+                },
+                noItemsFoundBuilder: (context) => const ListTile(
+                  title: Text(
+                    'ไม่พบรายการ',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                autoFlipDirection: true,
+                validator: validator,
               ),
             )
-            .toList(),
-        onChanged: onChanged,
-        validator: (value) {
-          if (value == null) {
-            return 'จำเป็น';
-          }
-          return null;
-        },
-      ),
+          : DropdownButtonFormField<String>(
+              value: value,
+              decoration: InputDecoration(labelText: label),
+              hint: hint == null ? null : Text(hint!),
+              items: items
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(e),
+                    ),
+                  )
+                  .toList(),
+              onChanged: onChanged,
+              validator: validator,
+            ),
     );
   }
 }
@@ -173,42 +209,3 @@ class _FileUploaderState extends State<FileUploader> {
     ]);
   }
 }
-
-class BlockBorder extends StatelessWidget {
-  const BlockBorder({required this.child, this.width = 840, super.key});
-
-  final Widget child;
-  final double width;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-      margin: const EdgeInsets.all(10),
-      width: width,
-      decoration: BoxDecoration(
-        border: Border.all(),
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-      ),
-      child: child,
-    );
-  }
-}
-
-class BidirectionScroll extends StatelessWidget {
-  const BidirectionScroll({required this.child, super.key});
-  final Widget child;
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: child,
-      ),
-    );
-  }
-}
-
-const spacing = SizedBox(width: 20);
-const spacingVertical = SizedBox(height: 20);

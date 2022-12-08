@@ -47,6 +47,10 @@ dependencies:
   json_annotation: ^4.7.0
   provider: ^6.0.4
   flutter_phoenix: ^1.1.0
+  dropdown_search: ^5.0.5
+  dropdown_button2: ^1.9.2
+  dropdown_plus: ^0.0.9
+  flutter_typeahead: ^4.1.1
 
 dev_dependencies:
   flutter_test:

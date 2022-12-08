@@ -7,6 +7,8 @@ import 'package:woot/utils/connection_util.dart';
 import 'package:woot/utils/ui_util.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
+import '../widgets/misc_widgets.dart';
+
 class InsuranceFormScreen extends StatefulWidget {
   const InsuranceFormScreen({required this.customerId, super.key});
 
@@ -56,11 +58,9 @@ class _InsuranceFormScreenState extends State<InsuranceFormScreen> {
         timeoutSecond: 30,
         future: () async {
           List<String> filesName = [];
-          int i = 0;
           for (var file in files!) {
-            var fileName = '${insuranceNumber}_$i.${file.extension}';
+            var fileName = '${insuranceNumber}_${file.name}';
             filesName.add(fileName);
-            i++;
             await uploadFile(file, fileName);
           }
           final insurance = Insurance(

@@ -36,6 +36,18 @@ class Customer {
   factory Customer.fromJson(Map<String, dynamic> json) =>
       _$CustomerFromJson(json);
   Map<String, dynamic> toJson() => _$CustomerToJson(this);
+  
+  late final List<String> asTextRow = [
+    assuredType,
+    juristicName ?? '',
+    namePrefix,
+    firstname,
+    surname,
+    province,
+    district,
+    subdistrict,
+    zipcode,
+  ];
 }
 
 class CustomerDocument {

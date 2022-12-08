@@ -7,6 +7,7 @@ import 'package:woot/widgets/form_widgets.dart';
 
 import '../constants/constant.dart';
 import '../utils/validator.dart';
+import '../widgets/misc_widgets.dart';
 
 class CustomerFormScreen extends StatefulWidget {
   const CustomerFormScreen({this.editFrom, super.key});
@@ -20,13 +21,13 @@ class CustomerFormScreen extends StatefulWidget {
 class _CustomerFormScreenState extends State<CustomerFormScreen> {
   String assuredType = Constant.assuredTypes.first;
   String namePrefix = Constant.namePrefixes.first;
-  late String firstname;
-  late String surname;
+  String firstname = '';
+  String surname = '';
   String? juristicName;
-  String? province;
-  String? district;
-  String? subdistrict;
-  late String zipcode;
+  String province = '';
+  String district = '';
+  String subdistrict = '';
+  String zipcode = '';
   String addressDetail = '';
   String phone = '';
   String email = '';
@@ -44,13 +45,13 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     final customer = Customer(
       addressDetail: addressDetail,
       assuredType: assuredType,
-      district: district!,
+      district: district,
       email: email,
       firstname: firstname,
       namePrefix: namePrefix,
       phone: phone,
-      province: province!,
-      subdistrict: subdistrict!,
+      province: province,
+      subdistrict: subdistrict,
       surname: surname,
       zipcode: zipcode,
       juristicName: juristicName,
@@ -180,15 +181,25 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         value: province,
                         width: 200,
                         label: 'จังหวัด',
+                        isSearchable: true,
                         items: GeoData.changwats,
                         onChanged: (value) {
                           if (province != value) {
                             setState(() {
-                              district = null;
-                              subdistrict = null;
-                              province = value;
+                              district = '';
+                              subdistrict = '';
+                              province = value!;
                             });
                           }
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'จำเป็น';
+                          }
+                          if (!GeoData.changwats.contains(province)) {
+                            return 'ไม่พบชื่อนี้';
+                          }
+                          return null;
                         },
                       ),
                       spacing,
@@ -196,15 +207,27 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         value: district,
                         width: 200,
                         label: 'เขต/อำเภอ',
-                        items:
-                            province == null ? [] : GeoData.amphoes[province]!,
+                        isSearchable: true,
+                        items: GeoData.amphoes[province] ?? [],
                         onChanged: (value) {
                           if (district != value) {
                             setState(() {
-                              subdistrict = null;
-                              district = value;
+                              subdistrict = '';
+                              district = value!;
                             });
                           }
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'จำเป็น';
+                          }
+                          if (GeoData.amphoes[province] == null) {
+                            return null;
+                          }
+                          if (!GeoData.amphoes[province]!.contains(district)) {
+                            return 'ไม่พบชื่อนี้';
+                          }
+                          return null;
                         },
                       ),
                       spacing,
@@ -212,12 +235,24 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         value: subdistrict,
                         width: 200,
                         label: 'แขวง/ตำบล',
-                        items: province == null || district == null
-                            ? []
-                            : GeoData.tambons[province]![district]!,
+                        isSearchable: true,
+                        items: GeoData.tambons[province]?[district] ?? [],
                         onChanged: (value) => setState(() {
                           subdistrict = value!;
                         }),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'จำเป็น';
+                          }
+                          if (GeoData.tambons[province]?[district] == null) {
+                            return null;
+                          }
+                          if (!GeoData.tambons[province]![district]!
+                              .contains(subdistrict)) {
+                            return 'ไม่พบชื่อนี้';
+                          }
+                          return null;
+                        },
                       ),
                     ],
                   ),
