@@ -5,6 +5,7 @@ part 'customer.g.dart';
 @JsonSerializable()
 class Customer {
   final String assuredType;
+  final String identificationNumber;
   final String namePrefix;
   final String firstname;
   final String surname;
@@ -13,12 +14,18 @@ class Customer {
   final String district;
   final String subdistrict;
   final String zipcode;
-  final String addressDetail;
+  final String houseNumber;
+  final String buildingOrVillage;
+  final String villageNumber;
+  final String alley;
+  final String lane;
+  final String road;
   final String phone;
   final String email;
 
   Customer({
     required this.assuredType,
+    required this.identificationNumber,
     required this.namePrefix,
     required this.firstname,
     required this.surname,
@@ -27,7 +34,12 @@ class Customer {
     required this.district,
     required this.subdistrict,
     required this.zipcode,
-    required this.addressDetail,
+    required this.houseNumber,
+    required this.buildingOrVillage,
+    required this.villageNumber,
+    required this.alley,
+    required this.lane,
+    required this.road,
     required this.phone,
     required this.email,
   });
@@ -36,7 +48,7 @@ class Customer {
   factory Customer.fromJson(Map<String, dynamic> json) =>
       _$CustomerFromJson(json);
   Map<String, dynamic> toJson() => _$CustomerToJson(this);
-  
+
   late final List<String> asTextRow = [
     assuredType,
     juristicName ?? '',
@@ -48,6 +60,18 @@ class Customer {
     subdistrict,
     zipcode,
   ];
+
+  static const headers = [
+    'ประเภท',
+    'ชื่อนิติบุคคล',
+    'คำนำหน้า',
+    'ชื่อจริง',
+    'นามสกุล',
+    'จังหวัด',
+    'อำเภอ',
+    'ตำบล',
+    'ไปรษณีย์',
+  ];
 }
 
 class CustomerDocument {
@@ -55,7 +79,11 @@ class CustomerDocument {
   final String id;
   final DocumentReference<Map<String, dynamic>> reference;
 
-  CustomerDocument(this.data, this.id, this.reference);
+  CustomerDocument({
+    required this.data,
+    required this.id,
+    required this.reference,
+  });
 
   CustomerDocument.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc)
       : data = Customer.fromJson(doc.data()!),

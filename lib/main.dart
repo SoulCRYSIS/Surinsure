@@ -32,19 +32,19 @@ class MyApp extends StatelessWidget {
             headline1: TextStyle(
                 fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
           ),
+          iconTheme: const IconThemeData(size: 16),
+          errorColor: Colors.red[400],
           elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
                   textStyle: const TextStyle(fontSize: 16))),
           inputDecorationTheme: InputDecorationTheme(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            errorStyle: const TextStyle(height: 1),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(5),
-            ),
-            isDense: true
-          ),
-          
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              errorStyle: const TextStyle(height: 1),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(5),
+              ),
+              isDense: true),
           snackBarTheme: const SnackBarThemeData(
             behavior: SnackBarBehavior.floating,
           ),

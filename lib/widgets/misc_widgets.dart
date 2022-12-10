@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class BlockBorder extends StatelessWidget {
-  const BlockBorder({required this.child, this.width = 840, super.key});
+  const BlockBorder({required this.child, this.width = 850, super.key});
 
   final Widget child;
   final double width;

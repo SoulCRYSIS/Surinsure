@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:woot/screens/search_customers_screen.dart';
 import 'package:woot/screens/customer_form_screen.dart';
+import 'package:woot/screens/search_insurances_screen.dart';
 
 import '../widgets/misc_widgets.dart';
 
@@ -47,6 +48,19 @@ class MenuScreen extends StatelessWidget {
                           ),
                         ),
                         child: const Text('ข้อมูลลูกค้า'),
+                      ),
+                    ),
+                    spacingVertical,
+                    SizedBox(
+                      width: 250,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SearchInsurancesScreen(),
+                          ),
+                        ),
+                        child: const Text('ข้อมูลกรมธรรม์'),
                       ),
                     ),
                   ],

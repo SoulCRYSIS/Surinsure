@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:woot/constants/firestore_collection.dart';
 import 'package:woot/constants/geo_data.dart';
 import 'package:woot/screens/customer_form_screen.dart';
+import 'package:woot/utils/ui_util.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
 import '../models/customer.dart';
@@ -20,30 +22,70 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
 
   final formKey = GlobalKey<FormState>();
 
-  String? assuredType;
-  String? namePrefix;
-  late String firstname;
-  late String surname;
-  String? juristicName;
-  String? province;
-  String? district;
-  String? subdistrict;
-  late String zipcode;
+  String assuredType = '';
+  String namePrefix = '';
+  String firstname = '';
+  String surname = '';
+  String juristicName = '';
+  String province = '';
+  String district = '';
+  String subdistrict = '';
+  String zipcode = '';
 
   List<CustomerDocument> docs = [];
 
-  static const headers = [
-    'ประเภท',
-    'ชื่อจริง',
-    'นามสกุล',
-    'จังหวัด',
-    'อำเภอ',
-    'ตำบล',
-    'ไปรษณีย์',
-  ];
+  Future<void> search() async {
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
 
-  void search() {
-    final ref = FirestoreCollection.customers;
+    const lastChar = '\uf8ff';
+
+    Query<Map<String, dynamic>> query = FirestoreCollection.customers;
+    if (assuredType.isNotEmpty) {
+      query = query.where('assuredType', isEqualTo: assuredType);
+    }
+    if (namePrefix.isNotEmpty) {
+      query = query.where('namePrefix', isEqualTo: namePrefix);
+    }
+    if (firstname.isNotEmpty) {
+      query = query
+          .where('firstname', isGreaterThanOrEqualTo: firstname)
+          .where('firstname', isLessThan: firstname + lastChar);
+    }
+    if (surname.isNotEmpty) {
+      query = query
+          .where('surname', isGreaterThanOrEqualTo: surname)
+          .where('surname', isLessThan: surname + lastChar);
+    }
+    if (juristicName.isNotEmpty) {
+      query = query
+          .where('juristicName', isGreaterThanOrEqualTo: juristicName)
+          .where('juristicName', isLessThan: juristicName + lastChar);
+    }
+    if (province.isNotEmpty) {
+      query = query.where('province', isEqualTo: province);
+    }
+    if (district.isNotEmpty) {
+      query = query.where('district', isEqualTo: district);
+    }
+    if (subdistrict.isNotEmpty) {
+      query = query.where('subdistrict', isEqualTo: subdistrict);
+    }
+    if (zipcode.isNotEmpty) {
+      query = query.where('zipcode', isEqualTo: zipcode);
+    }
+    try {
+      await UiUtil.loadingScreen(context, timeoutSecond: 3, future: () async {
+        docs = (await query.get())
+            .docs
+            .map((e) => CustomerDocument.fromDoc(e))
+            .toList();
+      }());
+    } catch (e) {
+      UiUtil.snackbar(context, e.toString());
+    }
+    setState(() {});
   }
 
   @override
@@ -66,14 +108,83 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                       'ตัวกรอง',
                       style: Theme.of(context).textTheme.headline1,
                     ),
+                    spacingVertical,
                     DropdownInputField(
-                      label: 'จังหวัด',
+                      value: province,
                       width: 200,
-                      items: GeoData.changwats,
+                      label: 'จังหวัด',
                       isSearchable: true,
-                      onChanged: (value) {
-                        print('change');
+                      items: GeoData.changwats,
+                      onEditingComplete: (value) {
+                        if (province != value) {
+                          setState(() {
+                            district = '';
+                            subdistrict = '';
+                            province = value!;
+                          });
+                        }
                       },
+                      validator: (value) {
+                        if (subdistrict.isEmpty) {
+                          return null;
+                        }
+                        if (!GeoData.changwats.contains(province)) {
+                          return 'ไม่พบชื่อนี้';
+                        }
+                        return null;
+                      },
+                    ),
+                    spacingVertical,
+                    DropdownInputField(
+                      value: district,
+                      width: 200,
+                      label: 'เขต/อำเภอ',
+                      isSearchable: true,
+                      items: GeoData.amphoes[province] ?? [],
+                      onEditingComplete: (value) {
+                        if (district != value) {
+                          setState(() {
+                            subdistrict = '';
+                            district = value!;
+                          });
+                        }
+                      },
+                      validator: (value) {
+                        if (district.isEmpty ||
+                            GeoData.amphoes[province] == null) {
+                          return null;
+                        }
+                        if (!GeoData.amphoes[province]!.contains(district)) {
+                          return 'ไม่พบชื่อนี้';
+                        }
+                        return null;
+                      },
+                    ),
+                    spacingVertical,
+                    DropdownInputField(
+                      value: subdistrict,
+                      width: 200,
+                      label: 'แขวง/ตำบล',
+                      isSearchable: true,
+                      items: GeoData.tambons[province]?[district] ?? [],
+                      onEditingComplete: (value) => setState(() {
+                        subdistrict = value!;
+                      }),
+                      validator: (value) {
+                        if (subdistrict.isEmpty ||
+                            GeoData.tambons[province]?[district] == null) {
+                          return null;
+                        }
+                        if (!GeoData.tambons[province]![district]!
+                            .contains(subdistrict)) {
+                          return 'ไม่พบชื่อนี้';
+                        }
+                        return null;
+                      },
+                    ),
+                    ElevatedButton(
+                      onPressed: search,
+                      child: Text('ค้นหา'),
                     ),
                   ],
                 ),
@@ -94,13 +205,19 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                       fontSize: 14, fontWeight: FontWeight.bold),
                   headingRowHeight: 32,
                   dataRowHeight: 28,
-                  columns: headers
+                  columns: Customer.headers
                       .map(
                         (e) => DataColumn(
                           label: Text(e),
                           onSort: (columnIndex, ascending) => setState(() {
                             sortColumnIndex = columnIndex;
                             sortAscending = ascending;
+                            docs.sort(
+                              (a, b) =>
+                                  (ascending ? 1 : -1) *
+                                  a.data.asTextRow[columnIndex]
+                                      .compareTo(b.data.asTextRow[columnIndex]),
+                            );
                           }),
                         ),
                       )

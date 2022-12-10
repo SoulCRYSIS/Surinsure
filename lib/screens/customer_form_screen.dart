@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:woot/constants/firestore_collection.dart';
 import 'package:woot/constants/geo_data.dart';
 import 'package:woot/models/customer.dart';
+import 'package:woot/screens/policy_form_screen.dart';
+import 'package:woot/screens/property_form_screen.dart';
 import 'package:woot/utils/ui_util.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
@@ -21,20 +24,27 @@ class CustomerFormScreen extends StatefulWidget {
 class _CustomerFormScreenState extends State<CustomerFormScreen> {
   String assuredType = Constant.assuredTypes.first;
   String namePrefix = Constant.namePrefixes.first;
+  String identificationNumber = '';
   String firstname = '';
   String surname = '';
-  String? juristicName;
+  String? juristicName = '';
   String province = '';
   String district = '';
   String subdistrict = '';
   String zipcode = '';
-  String addressDetail = '';
+  String houseNumber = '';
+  String buildingOrVillage = '';
+  String villageNumber = '';
+  String alley = '';
+  String lane = '';
+  String road = '';
   String phone = '';
   String email = '';
 
   final formKey = GlobalKey<FormState>();
 
   bool get isPerson => 'บุคคลธรรมดา' == assuredType;
+  bool get isEditing => widget.editFrom != null;
 
   Future<void> upload() async {
     if (!formKey.currentState!.validate()) {
@@ -43,28 +53,49 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     formKey.currentState!.save();
 
     final customer = Customer(
-      addressDetail: addressDetail,
       assuredType: assuredType,
-      district: district,
-      email: email,
-      firstname: firstname,
       namePrefix: namePrefix,
-      phone: phone,
-      province: province,
-      subdistrict: subdistrict,
+      identificationNumber: identificationNumber,
+      firstname: firstname,
       surname: surname,
+      juristicName: isPerson ? null : juristicName,
+      province: province,
+      district: district,
+      subdistrict: subdistrict,
       zipcode: zipcode,
-      juristicName: juristicName,
+      houseNumber: houseNumber,
+      buildingOrVillage: buildingOrVillage,
+      villageNumber: villageNumber,
+      alley: alley,
+      lane: lane,
+      road: road,
+      phone: phone,
+      email: email,
     );
     try {
+      late final DocumentReference<Map<String, dynamic>> newDocRef;
       await UiUtil.loadingScreen(context,
           timeoutSecond: 3,
-          future: widget.editFrom == null
-              ? FirestoreCollection.customers.add(customer.toJson())
+          future: !isEditing
+              ? () async {
+                  newDocRef = await FirestoreCollection.customers
+                      .add(customer.toJson());
+                }()
               : widget.editFrom!.reference.update(customer.toJson()));
-      //formKey.currentState!.reset();
-      // ignore: use_build_context_synchronously
-      UiUtil.snackbar(context, 'บันทึกข้อมูลสำเร็จ', isError: false);
+      if (!isEditing) {
+        formKey.currentState!.reset();
+        // ignore: use_build_context_synchronously
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CustomerFormScreen(
+                  editFrom: CustomerDocument(
+                      id: newDocRef.id, reference: newDocRef, data: customer)),
+            ));
+      } else {
+        // ignore: use_build_context_synchronously
+        UiUtil.snackbar(context, 'บันทึกข้อมูลสำเร็จ', isError: false);
+      }
     } catch (e) {
       UiUtil.snackbar(context, e.toString());
     }
@@ -72,10 +103,11 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
 
   @override
   void initState() {
-    if (widget.editFrom != null) {
+    if (isEditing) {
       final Customer e = widget.editFrom!.data;
       assuredType = e.assuredType;
       namePrefix = e.namePrefix;
+      identificationNumber = e.identificationNumber;
       firstname = e.firstname;
       surname = e.surname;
       juristicName = e.juristicName;
@@ -83,7 +115,12 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
       district = e.district;
       subdistrict = e.subdistrict;
       zipcode = e.zipcode;
-      addressDetail = e.addressDetail;
+      houseNumber = e.houseNumber;
+      buildingOrVillage = e.buildingOrVillage;
+      villageNumber = e.villageNumber;
+      alley = e.alley;
+      lane = e.lane;
+      road = e.road;
       phone = e.phone;
       email = e.email;
     }
@@ -94,7 +131,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: widget.editFrom == null
+          title: !isEditing
               ? const Text('ลงทะเบียนลูกค้าใหม่')
               : const Text('แก้ไขข้อมูลลูกค้า')),
       body: Center(
@@ -105,14 +142,27 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (isEditing) ...[
+                    Row(
+                      children: [
+                        const TopicText('รหัสลูกค้า'),
+                        spacing,
+                        TextCopyable(
+                          width: 300,
+                          value: widget.editFrom!.id,
+                        ),
+                      ],
+                    ),
+                    spacingVertical,
+                  ],
                   Row(
                     children: [
-                      const TopicText('ประเภทคู่สัญญา'),
+                      const TopicText('ประเภท'),
                       spacing,
                       DropdownInputField(
                         width: 150,
                         value: assuredType,
-                        onChanged: (value) {
+                        onEditingComplete: (value) {
                           if (assuredType != value) {
                             setState(() {
                               assuredType = value!;
@@ -128,7 +178,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           width: 320,
                           initialValue: juristicName,
                           onSaved: (value) => juristicName = value!,
-                          validator: Validator.noneEmpty,
+                          isRequire: true,
                         ),
                       ],
                     ],
@@ -136,7 +186,25 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                   spacingVertical,
                   Row(
                     children: [
-                      TopicText(isPerson ? 'ชื่อ' : 'ชื่อเจ้าของ'),
+                      const TopicText('เลขบัตรประชาชน'),
+                      spacing,
+                      TextInputField(
+                        width: 250,
+                        initialValue: identificationNumber,
+                        onSaved: (value) => identificationNumber = value!,
+                        validator: (value) {
+                          if (value!.length != 13) {
+                            return 'ความยาวไม่ถูกต้อง';
+                          }
+                        },
+                        isRequire: true,
+                      ),
+                    ],
+                  ),
+                  spacingVertical,
+                  Row(
+                    children: [
+                      const TopicText('ชื่อผู้เอาประกัน'),
                       spacing,
                       SizedBox(
                         width: 100,
@@ -151,7 +219,6 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                               )
                               .toList(),
                           onChanged: (value) => namePrefix = value!,
-                          validator: Validator.noneEmpty,
                         ),
                       ),
                       spacing,
@@ -160,7 +227,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         width: 250,
                         initialValue: firstname,
                         onSaved: (value) => firstname = value!,
-                        validator: Validator.noneEmpty,
+                        isRequire: true,
                       ),
                       spacing,
                       TextInputField(
@@ -168,14 +235,55 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         width: 250,
                         initialValue: surname,
                         onSaved: (value) => surname = value!,
-                        validator: Validator.noneEmpty,
+                        isRequire: true,
                       ),
                     ],
                   ),
                   spacingVertical,
                   Row(
                     children: [
-                      TopicText(isPerson ? 'ที่อยู่' : 'ที่ตั้งนิติบุคคล'),
+                      const TopicText('ที่อยู่ติดต่อ'),
+                      spacing,
+                      TextInputField(
+                        width: 100,
+                        initialValue: houseNumber,
+                        onSaved: (value) => houseNumber = value!,
+                        label: 'บ้านเลขที่',
+                      ),
+                      spacing,
+                      TextInputField(
+                        width: 150,
+                        initialValue: buildingOrVillage,
+                        onSaved: (value) => buildingOrVillage = value!,
+                        label: 'ตึก/หมู่บ้าน',
+                      ),
+                      spacing,
+                      TextInputField(
+                        width: 50,
+                        initialValue: villageNumber,
+                        onSaved: (value) => villageNumber = value!,
+                        label: 'หมู่',
+                      ),
+                      spacing,
+                      TextInputField(
+                        width: 130,
+                        initialValue: alley,
+                        onSaved: (value) => alley = value!,
+                        label: 'ตรอก',
+                      ),
+                      spacing,
+                      TextInputField(
+                        width: 130,
+                        initialValue: lane,
+                        onSaved: (value) => lane = value!,
+                        label: 'ซอย',
+                      ),
+                    ],
+                  ),
+                  spacingVertical,
+                  Row(
+                    children: [
+                      const SizedBox(width: 150),
                       spacing,
                       DropdownInputField(
                         value: province,
@@ -183,7 +291,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         label: 'จังหวัด',
                         isSearchable: true,
                         items: GeoData.changwats,
-                        onChanged: (value) {
+                        onEditingComplete: (value) {
                           if (province != value) {
                             setState(() {
                               district = '';
@@ -193,14 +301,12 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           }
                         },
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'จำเป็น';
-                          }
                           if (!GeoData.changwats.contains(province)) {
                             return 'ไม่พบชื่อนี้';
                           }
                           return null;
                         },
+                        isRequire: true,
                       ),
                       spacing,
                       DropdownInputField(
@@ -209,7 +315,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         label: 'เขต/อำเภอ',
                         isSearchable: true,
                         items: GeoData.amphoes[province] ?? [],
-                        onChanged: (value) {
+                        onEditingComplete: (value) {
                           if (district != value) {
                             setState(() {
                               subdistrict = '';
@@ -218,9 +324,6 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           }
                         },
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'จำเป็น';
-                          }
                           if (GeoData.amphoes[province] == null) {
                             return null;
                           }
@@ -229,6 +332,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           }
                           return null;
                         },
+                        isRequire: true,
                       ),
                       spacing,
                       DropdownInputField(
@@ -237,13 +341,10 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         label: 'แขวง/ตำบล',
                         isSearchable: true,
                         items: GeoData.tambons[province]?[district] ?? [],
-                        onChanged: (value) => setState(() {
+                        onEditingComplete: (value) => setState(() {
                           subdistrict = value!;
                         }),
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'จำเป็น';
-                          }
                           if (GeoData.tambons[province]?[district] == null) {
                             return null;
                           }
@@ -253,6 +354,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           }
                           return null;
                         },
+                        isRequire: true,
                       ),
                     ],
                   ),
@@ -267,22 +369,20 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         onSaved: (value) => zipcode = value!,
                         label: 'ไปรษณีย์',
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'จำเป็น';
-                          }
-                          if (value.length != 5 ||
+                          if (value!.length != 5 ||
                               !RegExp(r'^[0-9]+$').hasMatch(value)) {
                             return 'ไม่ถูกต้อง';
                           }
                           return null;
                         },
+                        isRequire: true,
                       ),
                       spacing,
                       TextInputField(
-                        width: 520,
-                        initialValue: addressDetail,
-                        onSaved: (value) => addressDetail = value!,
-                        label: 'รายละเอียดอื่นๆ',
+                        width: 200,
+                        initialValue: road,
+                        onSaved: (value) => road = value!,
+                        label: 'ถนน',
                       ),
                     ],
                   ),
@@ -298,7 +398,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         label: 'เบอร์โทรศัพท์',
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'จำเป็น';
+                            return null;
                           }
                           // Thai format
                           if (RegExp(r'^[0-9]+$').hasMatch(value)) {
@@ -333,17 +433,51 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                     ],
                   ),
                   spacingVertical,
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: upload,
-                      child: const SizedBox(
-                        width: 100,
-                        child: Text(
-                          'ยืนยัน',
-                          textAlign: TextAlign.center,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isEditing) ...[
+                        ElevatedButton(
+                          onPressed: () {},
+                          child: const SizedBox(
+                            width: 120,
+                            child: Text(
+                              'ดูทรัพย์สินทั้งหมด',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        spacing,
+                        ElevatedButton(
+                          onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PropertyFormScreen(
+                                  customerId: widget.editFrom!.id,
+                                  customerData: widget.editFrom!.data,
+                                ),
+                              )),
+                          child: const SizedBox(
+                            width: 120,
+                            child: Text(
+                              'เพิ่มทรัพย์สิน',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        spacing,
+                      ],
+                      ElevatedButton(
+                        onPressed: upload,
+                        child: SizedBox(
+                          width: 120,
+                          child: Text(
+                            isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน',
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
