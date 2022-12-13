@@ -13,10 +13,10 @@ abstract class Policy {
   final DateTime contractIssueDate;
   final DateTime policyIssueDate;
   final List<String> filesName;
-  final double premium;
-  final double premiumDiscount;
+  final double netPremium;
   final double duty;
   final double tax;
+  final String company;
 
   Policy({
     required this.customerId,
@@ -28,10 +28,10 @@ abstract class Policy {
     required this.policyIssueDate,
     required this.contractIssueDate,
     required this.filesName,
-    required this.premium,
-    required this.premiumDiscount,
+    required this.netPremium,
     required this.duty,
     required this.tax,
+    required this.company,
   });
 
   factory Policy.fromJson(Map<String, dynamic> json) {
@@ -42,7 +42,6 @@ abstract class Policy {
   }
   Map<String, dynamic> toJson();
 
-  double get netPremium => premium - premiumDiscount;
   double get totalFee => netPremium + duty + tax;
   List<String> get filesActualName =>
       filesName.map((e) => e.substring(policyNumber.length)).toList();
@@ -60,12 +59,12 @@ abstract class Policy {
 
 @JsonSerializable()
 class FirePolicy extends Policy {
-  final int buildingFund;
-  final int furnitureFund;
-  final int buildingFurnitureFund;
-  final int stockFund;
-  final int machineFund;
-  final int otherFund;
+  final double buildingFund;
+  final double furnitureFund;
+  final double buildingFurnitureFund;
+  final double stockFund;
+  final double machineFund;
+  final double otherFund;
 
   FirePolicy({
     required super.customerId,
@@ -77,18 +76,18 @@ class FirePolicy extends Policy {
     required super.policyIssueDate,
     required super.contractIssueDate,
     required super.filesName,
-    required super.premium,
-    required super.premiumDiscount,
+    required super.netPremium,
     required super.duty,
     required super.tax,
+    required super.company,
     required this.buildingFund,
     required this.furnitureFund,
     required this.buildingFurnitureFund,
     required this.stockFund,
     required this.machineFund,
     required this.otherFund,
-  }) : assert(buildingFurnitureFund != 0 &&
-            (buildingFund != 0 || furnitureFund != 0));
+  }) : assert(!(buildingFurnitureFund != 0 &&
+            (buildingFund != 0 || furnitureFund != 0)));
 
   //Constructor and Function from package 'json_serializable'
   factory FirePolicy.fromJson(Map<String, dynamic> json) =>

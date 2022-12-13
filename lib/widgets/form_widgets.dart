@@ -1,10 +1,14 @@
+import 'package:expandable/expandable.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:intl/intl.dart';
+import 'package:woot/utils/server_data.dart';
 import 'package:woot/utils/validator.dart';
 import 'package:woot/widgets/misc_widgets.dart';
+
+const topicSpacing = SizedBox(width: 150);
 
 class TopicText extends StatelessWidget {
   const TopicText(this.text, {super.key});
@@ -40,13 +44,18 @@ class DateInputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 150,
+      width: 160,
       child: TextFormField(
         initialValue: initialValue == null
             ? null
             : DateFormat('dd/MM/').format(initialValue!) +
                 (initialValue!.year + 543).toString(),
-        decoration: InputDecoration(labelText: label, hintText: 'xx/xx/25xx'),
+        decoration: InputDecoration(
+            labelText: label,
+            hintText: 'dd/mm/yyyy',
+            suffixIcon: const Icon(
+              Icons.calendar_month,
+            )),
         onSaved: (newValue) {
           if (newValue == null) {
             onSaved(null);
@@ -132,6 +141,7 @@ class TextCopyable extends StatelessWidget {
   Widget build(BuildContext context) {
     return FieldBorder(
       width: width,
+      color: Colors.grey[300],
       child: Row(
         children: [
           InkWell(
@@ -139,10 +149,7 @@ class TextCopyable extends StatelessWidget {
             child: const Icon(Icons.copy),
           ),
           spacing,
-          SelectableText(
-            value,
-            style: const TextStyle(color: Colors.grey),
-          ),
+          SelectableText(value),
         ],
       ),
     );
@@ -293,17 +300,11 @@ class DropdownInputField extends StatelessWidget {
   }
 }
 
-class FileUploader extends StatefulWidget {
-  const FileUploader({required this.onChanged, super.key});
+class FileUploader extends StatelessWidget {
+  const FileUploader({required this.onChanged, required this.files, super.key});
 
-  final void Function(List<PlatformFile>? value) onChanged;
-
-  @override
-  State<FileUploader> createState() => _FileUploaderState();
-}
-
-class _FileUploaderState extends State<FileUploader> {
-  List<PlatformFile>? files;
+  final void Function(List<PlatformFile> value) onChanged;
+  final List<PlatformFile> files;
 
   @override
   Widget build(BuildContext context) {
@@ -316,13 +317,10 @@ class _FileUploaderState extends State<FileUploader> {
           if (result == null) {
             return;
           }
-          setState(() {
-            files = result.files;
-          });
-          widget.onChanged(files!);
+          onChanged(result.files);
         },
         child: FieldBorder(
-          width: 250,
+          width: 200,
           child: Row(
             children: [
               Icon(
@@ -332,14 +330,13 @@ class _FileUploaderState extends State<FileUploader> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  files == null
+                  files.isEmpty
                       ? 'อัพโหลดไฟล์'
-                      : files!.length == 1
-                          ? files!.first.name
-                          : 'แนบ ${files!.length} ไฟล์',
-                  style: files == null || files!.length > 1
-                      ? null
-                      : const TextStyle(fontSize: 12),
+                      : files.length == 1
+                          ? files.first.name
+                          : 'แนบ ${files.length} ไฟล์',
+                  style:
+                      files.length == 1 ? const TextStyle(fontSize: 14) : null,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -348,13 +345,10 @@ class _FileUploaderState extends State<FileUploader> {
         ),
       ),
       const SizedBox(width: 10),
-      if (files != null)
+      if (files.isNotEmpty)
         InkWell(
           onTap: () {
-            setState(() {
-              files = null;
-            });
-            widget.onChanged(null);
+            onChanged([]);
           },
           child: Icon(
             Icons.cancel,
@@ -380,33 +374,54 @@ class AllFilesExpandPanel extends StatelessWidget {
         border: Border.all(color: Colors.grey),
         borderRadius: const BorderRadius.all(Radius.circular(5)),
       ),
-      child: ExpansionTile(
-        title: Text('ทั้งหมด ${items.length} ไฟล์'),
-        leading: Icon(
-          Icons.file_copy,
-          color: Theme.of(context).primaryColor,
+      child: ExpandablePanel(
+        theme: const ExpandableThemeData(
+          headerAlignment: ExpandablePanelHeaderAlignment.center,
+          iconPadding: EdgeInsets.symmetric(horizontal: 10),
         ),
-        children: items
-            .map(
-              (e) => ListTile(
-                title: Text(e.substring(prefixLength)),
-                leading: InkWell(
-                  onTap: () {},
-                  child: Icon(
-                    Icons.download,
-                    color: Theme.of(context).primaryColor,
+        header: SizedBox(
+          height: 32,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.file_copy,
+                  color: Colors.grey,
+                ),
+                spacing,
+                Text('ทั้งหมด ${items.length} ไฟล์'),
+              ],
+            ),
+          ),
+        ),
+        collapsed: Container(),
+        expanded: Column(
+          children: items
+              .map(
+                (e) => InkWell(
+                  onTap: () => ServerData.downloadFile(e),
+                  child: Container(
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.download,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        spacing,
+                        Text(
+                          e.substring(prefixLength),
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                trailing: InkWell(
-                  onTap: () {},
-                  child: Icon(
-                    Icons.delete,
-                    color: Theme.of(context).errorColor,
-                  ),
-                ),
-              ),
-            )
-            .toList(),
+              )
+              .toList(),
+        ),
       ),
     );
   }
@@ -424,6 +439,12 @@ class TableInputFields extends StatelessWidget {
     return Theme(
       data: Theme.of(context).copyWith(
         inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
+              errorBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  width: 2,
+                  color: Theme.of(context).errorColor,
+                ),
+              ),
               errorStyle: const TextStyle(fontSize: 0.2),
               enabledBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.transparent)),

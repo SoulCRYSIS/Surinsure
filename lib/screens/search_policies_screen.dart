@@ -65,7 +65,7 @@ class _SearchPoliciesScreenState extends State<SearchPoliciesScreen> {
                     ),
                     ElevatedButton(
                       onPressed: search,
-                      child: Text('ค้นหา'),
+                      child: const Text('ค้นหา'),
                     ),
                   ],
                 ),
