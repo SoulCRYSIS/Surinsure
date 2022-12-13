@@ -184,7 +184,7 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                     ),
                     ElevatedButton(
                       onPressed: search,
-                      child: Text('ค้นหา'),
+                      child: const Text('ค้นหา'),
                     ),
                   ],
                 ),
@@ -198,13 +198,7 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                   showCheckboxColumn: false,
                   sortColumnIndex: sortColumnIndex,
                   sortAscending: sortAscending,
-                  horizontalMargin: 0,
                   columnSpacing: 10,
-                  dataTextStyle: const TextStyle(fontSize: 14),
-                  headingTextStyle: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold),
-                  headingRowHeight: 32,
-                  dataRowHeight: 28,
                   columns: Customer.headers
                       .map(
                         (e) => DataColumn(

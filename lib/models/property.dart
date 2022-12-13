@@ -18,10 +18,13 @@ enum PropertyType {
 
 abstract class Property {
   final PropertyType type;
-  Property({required this.type});
+  final String customerId;
+  Property({
+    required this.type,
+    required this.customerId,
+  });
 
   // Auto map to inherit class
-  //Constructor and Function from package 'json_serializable'
   factory Property.fromJson(Map<String, dynamic> json) {
     switch (PropertyType.fromString(json['type'])) {
       case PropertyType.fire:
@@ -29,6 +32,8 @@ abstract class Property {
     }
   }
   Map<String, dynamic> toJson();
+  
+  abstract final List<String> asTextRow;
 }
 
 @JsonSerializable()
@@ -48,13 +53,14 @@ class FireProperty extends Property {
   final String upperFloor;
   final String roofBeam;
   final String roof;
-  final int buildingCount;
+  final String buildingCount;
   final double width;
   final double length;
   final double area;
   final String occupancy;
 
   FireProperty({
+    required super.customerId,
     super.type = PropertyType.fire,
     required this.province,
     required this.district,
@@ -83,6 +89,19 @@ class FireProperty extends Property {
       _$FirePropertyFromJson(json);
   @override
   Map<String, dynamic> toJson() => _$FirePropertyToJson(this);
+
+  @override
+  late final List<String> asTextRow = [
+    province,
+    district,
+    subdistrict,
+  ];
+
+  static const List<String> headers = [
+    'จังหวัด',
+    'อำเภอ',
+    'ตำบล',
+  ];
 }
 
 class PropertyDocument {

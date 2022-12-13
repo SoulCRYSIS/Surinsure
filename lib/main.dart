@@ -3,14 +3,16 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:woot/screens/menu_screen.dart';
-
+import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  initializeDateFormatting('th_TH');
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(Phoenix(child: const MyApp()));
 }
 
@@ -34,6 +36,15 @@ class MyApp extends StatelessWidget {
           ),
           iconTheme: const IconThemeData(size: 16),
           errorColor: Colors.red[400],
+          dataTableTheme: const DataTableThemeData(
+            horizontalMargin: 0,
+            columnSpacing: 0,
+            dataTextStyle: TextStyle(fontSize: 14),
+            headingTextStyle:
+                TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            headingRowHeight: 32,
+            dataRowHeight: 28,
+          ),
           elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
                   textStyle: const TextStyle(fontSize: 16))),

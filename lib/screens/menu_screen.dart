@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:woot/screens/search_customers_screen.dart';
 import 'package:woot/screens/customer_form_screen.dart';
-import 'package:woot/screens/search_insurances_screen.dart';
+import 'package:woot/screens/search_policies_screen.dart';
+import 'package:woot/screens/search_properties_screen.dart';
 
 import '../widgets/misc_widgets.dart';
 
@@ -57,7 +58,21 @@ class MenuScreen extends StatelessWidget {
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const SearchInsurancesScreen(),
+                            builder: (context) =>
+                                const SearchPropertiesScreen(),
+                          ),
+                        ),
+                        child: const Text('ข้อมูลทรัพย์สิน'),
+                      ),
+                    ),
+                    spacingVertical,
+                    SizedBox(
+                      width: 250,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SearchPoliciesScreen(),
                           ),
                         ),
                         child: const Text('ข้อมูลกรมธรรม์'),

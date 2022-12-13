@@ -7,7 +7,9 @@ part of 'property.dart';
 // **************************************************************************
 
 FireProperty _$FirePropertyFromJson(Map<String, dynamic> json) => FireProperty(
-      type: $enumDecode(_$PropertyTypeEnumMap, json['type']),
+      customerId: json['customerId'] as String,
+      type: $enumDecodeNullable(_$PropertyTypeEnumMap, json['type']) ??
+          PropertyType.fire,
       province: json['province'] as String,
       district: json['district'] as String,
       subdistrict: json['subdistrict'] as String,
@@ -23,7 +25,7 @@ FireProperty _$FirePropertyFromJson(Map<String, dynamic> json) => FireProperty(
       upperFloor: json['upperFloor'] as String,
       roofBeam: json['roofBeam'] as String,
       roof: json['roof'] as String,
-      buildingCount: json['buildingCount'] as int,
+      buildingCount: json['buildingCount'] as String,
       width: (json['width'] as num).toDouble(),
       length: (json['length'] as num).toDouble(),
       area: (json['area'] as num).toDouble(),
@@ -33,6 +35,7 @@ FireProperty _$FirePropertyFromJson(Map<String, dynamic> json) => FireProperty(
 Map<String, dynamic> _$FirePropertyToJson(FireProperty instance) =>
     <String, dynamic>{
       'type': _$PropertyTypeEnumMap[instance.type]!,
+      'customerId': instance.customerId,
       'province': instance.province,
       'district': instance.district,
       'subdistrict': instance.subdistrict,

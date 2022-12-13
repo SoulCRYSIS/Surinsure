@@ -4,19 +4,17 @@ import 'package:woot/models/policy.dart';
 import 'package:woot/screens/policy_form_screen.dart';
 
 import '../constants/firestore_collection.dart';
-import '../constants/geo_data.dart';
 import '../utils/ui_util.dart';
-import '../widgets/form_widgets.dart';
 import '../widgets/misc_widgets.dart';
 
-class SearchInsurancesScreen extends StatefulWidget {
-  const SearchInsurancesScreen({super.key});
+class SearchPoliciesScreen extends StatefulWidget {
+  const SearchPoliciesScreen({super.key});
 
   @override
-  State<SearchInsurancesScreen> createState() => _SearchInsurancesScreenState();
+  State<SearchPoliciesScreen> createState() => _SearchPoliciesScreenState();
 }
 
-class _SearchInsurancesScreenState extends State<SearchInsurancesScreen> {
+class _SearchPoliciesScreenState extends State<SearchPoliciesScreen> {
   int? sortColumnIndex;
   bool sortAscending = true;
 
@@ -48,7 +46,7 @@ class _SearchInsurancesScreenState extends State<SearchInsurancesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ข้อมูลลูกค้า')),
+      appBar: AppBar(title: const Text('ข้อมูลกรมธรรม์')),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
         child: SingleChildScrollView(
@@ -81,13 +79,7 @@ class _SearchInsurancesScreenState extends State<SearchInsurancesScreen> {
                   showCheckboxColumn: false,
                   sortColumnIndex: sortColumnIndex,
                   sortAscending: sortAscending,
-                  horizontalMargin: 0,
                   columnSpacing: 10,
-                  dataTextStyle: const TextStyle(fontSize: 14),
-                  headingTextStyle: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.bold),
-                  headingRowHeight: 32,
-                  dataRowHeight: 28,
                   columns: Policy.headers
                       .map(
                         (e) => DataColumn(
@@ -106,8 +98,11 @@ class _SearchInsurancesScreenState extends State<SearchInsurancesScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => PolicyFormScreen(
-                                        propertyId: doc.data.customerId,
-                                        editFrom: doc),
+                                      propertyId: doc.data.propertyId,
+                                      customerId: doc.data.customerId,
+                                      type: doc.data.type,
+                                      editFrom: doc,
+                                    ),
                                   ));
                             },
                             cells: doc.data.asTextRow

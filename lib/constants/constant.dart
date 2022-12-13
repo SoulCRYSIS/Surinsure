@@ -11,4 +11,6 @@ class Constant {
     'นาง',
     'นางสาว',
   ];
+
+  static const lastChar = '\uf8ff';
 }

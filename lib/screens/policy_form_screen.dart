@@ -1,18 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:woot/models/policy.dart';
+import 'package:woot/models/property.dart';
 import 'package:woot/utils/connection_util.dart';
+import 'package:woot/utils/server_data.dart';
 import 'package:woot/utils/ui_util.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
 import '../widgets/misc_widgets.dart';
 
 class PolicyFormScreen extends StatefulWidget {
-  const PolicyFormScreen({this.editFrom, required this.propertyId, super.key});
+  const PolicyFormScreen({
+    this.editFrom,
+    required this.propertyId,
+    required this.customerId,
+    required this.type,
+    super.key,
+  });
 
   final String propertyId;
+  final String customerId;
+  final PropertyType type;
   final PolicyDocument? editFrom;
 
   @override
@@ -20,36 +29,85 @@ class PolicyFormScreen extends StatefulWidget {
 }
 
 class _PolicyFormScreenState extends State<PolicyFormScreen> {
-  late final Policy? editFromData = widget.editFrom?.data;
+  final formKey = GlobalKey<FormState>();
 
-  String? insuranceType;
-  String insuranceNumber = '';
-  String note = '';
+  bool get isEditing => widget.editFrom != null;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+          title: widget.editFrom == null
+              ? const Text('เพิ่มกรมธรรม์')
+              : const Text('แก้ไขกรมธรรม์')),
+      body: Center(
+        child: BidirectionScroll(
+          child: BlockBorder(
+            child: () {
+              switch (widget.type) {
+                case PropertyType.fire:
+                  return FirePolcyForm(
+                    customerId: widget.customerId,
+                    propertyId: widget.propertyId,
+                    editFrom: widget.editFrom,
+                  );
+              }
+            }(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class FirePolcyForm extends StatefulWidget {
+  const FirePolcyForm({
+    required this.customerId,
+    required this.propertyId,
+    this.editFrom,
+    super.key,
+  });
+
+  final PolicyDocument? editFrom;
+  final String customerId;
+  final String propertyId;
+
+  @override
+  State<FirePolcyForm> createState() => _FirePolcyFormState();
+}
+
+class _FirePolcyFormState extends State<FirePolcyForm> {
+  String policyNumber = '';
+  DateTime? startDate;
+  DateTime? endDate;
+  DateTime? contractIssueDate;
+  DateTime policyIssueDate = DateTime.now();
+  double? premium;
+  double? premiumDiscount;
+  double? duty;
+  double? tax;
+
+  int? buildingFund;
+  int? furnitureFund;
+  int? buildingFurnitureFund;
+  int? stockFund;
+  int? machineFund;
+  int? otherFund;
+
   List<PlatformFile>? files;
-
-  List<String> allInsuranceTypes = [
-    'อัคคีภัย',
-    'รถยนตร์',
-    'เบ็ดเตล็ด',
-  ];
+  bool isSelectedBuildingFurniture = false;
 
   final formKey = GlobalKey<FormState>();
 
-  Future<void> uploadFile(PlatformFile file, String name) async {
-    await ConnectionUtil.setTimeout(
-        3, FirebaseStorage.instance.ref('uploads/$name').putData(file.bytes!));
-  }
-
-  Future<void> uploadInsurance() async {
+  bool get isEditing => widget.editFrom != null;
+  Future<void> upload() async {
     if (!formKey.currentState!.validate()) {
       return;
     }
-    formKey.currentState!.save();
-    insuranceNumber = insuranceNumber.replaceAll('/', '_');
+    policyNumber = policyNumber.replaceAll('/', '_');
 
-    final docRef = FirebaseFirestore.instance
-        .collection('insurances')
-        .doc(insuranceNumber);
+    final docRef =
+        FirebaseFirestore.instance.collection('insurances').doc(policyNumber);
     if ((await docRef.get()).exists) {
       UiUtil.snackbar(context, 'เลขที่กรมธรรม์ซ้ำ กรุณาตรวจสอบอีกครั้ง');
       return;
@@ -62,109 +120,155 @@ class _PolicyFormScreenState extends State<PolicyFormScreen> {
         future: () async {
           List<String> filesName = [];
           for (var file in files!) {
-            var fileName = '${insuranceNumber}_${file.name}';
+            var fileName = '${policyNumber}_${file.name}';
             filesName.add(fileName);
-            await uploadFile(file, fileName);
+            await ServerData.uploadFile(file, fileName);
           }
-          final insurance = Policy(
-            customerId: widget.propertyId,
-            insuranceNumber: insuranceNumber,
-            insuranceType: insuranceType!,
+          final policy = FirePolicy(
+            customerId: widget.customerId,
+            propertyId: widget.propertyId,
+            policyNumber: policyNumber,
+            startDate: startDate!,
+            endDate: endDate!,
+            policyIssueDate: policyIssueDate,
+            contractIssueDate: contractIssueDate!,
             filesName: filesName,
-            contractIssueDate: DateTime.now(),
-            policyIssueDate: DateTime.now(),
-            endDate: DateTime.now(),
-            startDate: DateTime.now(),
+            premium: premium!,
+            premiumDiscount: premiumDiscount!,
+            duty: duty!,
+            tax: tax!,
+            buildingFund: buildingFund!,
+            furnitureFund: furnitureFund!,
+            buildingFurnitureFund: buildingFurnitureFund!,
+            stockFund: stockFund!,
+            machineFund: machineFund!,
+            otherFund: otherFund!,
           );
-          await ConnectionUtil.setTimeout(3, docRef.set(insurance.toJson()));
+          await ConnectionUtil.setTimeout(3, docRef.set(policy.toJson()));
+          if (!isEditing) {
+            formKey.currentState!.reset();
+            // ignore: use_build_context_synchronously
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PolicyFormScreen(
+                      type: PropertyType.fire,
+                      propertyId: widget.propertyId,
+                      customerId: widget.customerId,
+                      editFrom: PolicyDocument(
+                        id: policyNumber,
+                        reference: docRef,
+                        data: policy,
+                      )),
+                ));
+          } else {
+            // ignore: use_build_context_synchronously
+            UiUtil.snackbar(context, 'บันทึกข้อมูลสำเร็จ', isError: false);
+          }
         }(),
       );
-    } on ConnectionFailedException catch (e) {
+    } catch (e) {
       UiUtil.snackbar(context, e.toString());
-    } catch (e, stacktrace) {
-      UiUtil.snackbar(context, e.toString());
-      debugPrintStack(stackTrace: stacktrace);
     }
   }
 
   @override
+  void initState() {
+    if (isEditing) {
+      final FirePolicy e = widget.editFrom!.data as FirePolicy;
+      policyNumber = e.policyNumber;
+      startDate = e.startDate;
+      endDate = e.endDate;
+      contractIssueDate = e.contractIssueDate;
+      policyIssueDate = e.policyIssueDate;
+      premium = e.premium;
+      premiumDiscount = e.premiumDiscount;
+      duty = e.duty;
+      tax = e.tax;
+      buildingFund = e.buildingFund;
+      furnitureFund = e.furnitureFund;
+      stockFund = e.stockFund;
+      machineFund = e.machineFund;
+      otherFund = e.otherFund;
+      isSelectedBuildingFurniture = buildingFurnitureFund != 0;
+    }
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          title: widget.editFrom == null
-              ? const Text('เพิ่มกรมธรรม์')
-              : const Text('แก้ไขกรมธรรม์')),
-      body: Center(
-        child: BidirectionScroll(
-          child: BlockBorder(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      const TopicText('เลขที่กรมธรรม์'),
-                      spacing,
-                      TextInputField(
-                        width: 250,
-                        onSaved: (value) => insuranceNumber = value!,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'จำเป็น';
-                          }
-                          if (value.contains('\\') || value.contains('.')) {
-                            return 'รูปแบบไม่ถูกต้อง';
-                          }
-                          return null;
-                        },
-                      ),
-                      const TopicText('ประเภท'),
-                      spacing,
-                      DropdownInputField(
-                        width: 150,
-                        hint: 'เลือกประเภท',
-                        value: insuranceType,
-                        onEditingComplete: (value) => insuranceType = value!,
-                        items: allInsuranceTypes,
-                      ),
-                    ],
-                  ),
-                  spacingVertical,
-                  Row(
-                    children: [
-                      const TopicText('หมายเหตุ'),
-                      spacing,
-                      TextInputField(
-                        width: 350,
-                        onSaved: (value) => note = value!,
-                        validator: (value) {
-                          if (value != null && value.length > 200) {
-                            return 'สูงสุด 200 ตัวอักษร';
-                          }
-                          return null;
-                        },
-                      ),
-                      const TopicText('แนบไฟล์'),
-                      if (editFromData != null &&
-                          editFromData!.filesName.isNotEmpty) ...[
-                        spacing,
-                        AllFilesExpandPanel(
-                          items: editFromData!.filesName,
-                          prefixLength: editFromData!.insuranceNumber.length,
-                        ),
-                      ],
-                      spacing,
-                      FileUploader(
-                        onChanged: (value) => files = value,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+    return Form(
+      key: formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const TopicText('เลขที่กรมธรรม์'),
+              spacing,
+              isEditing
+                  ? TextCopyable(
+                      width: 300,
+                      value: policyNumber,
+                    )
+                  : TextInputField(
+                      width: 300,
+                      onChanged: (value) => policyNumber = value!,
+                      isRequire: true,
+                      validator: (value) {
+                        if (value!.contains('\\') || value.contains('.')) {
+                          return 'รูปแบบไม่ถูกต้อง';
+                        }
+                        return null;
+                      },
+                    ),
+            ],
           ),
-        ),
+          spacingVertical,
+          Row(
+            children: [
+              const TopicText('ระยะเวลาประกันภัย'),
+              spacing,
+              DateInputField(
+                label: 'เริ่มต้น',
+                initialValue: startDate,
+                isRequire: true,
+                onSaved: (value) => startDate = value!,
+              ),
+              spacing,
+              DateInputField(
+                label: 'สิ้นสุด',
+                initialValue: endDate,
+                isRequire: true,
+                onSaved: (value) => endDate = value!,
+              ),
+            ],
+          ),
+          spacingVertical,
+          Row(
+            children: [
+              const TopicText('แนบไฟล์'),
+              if (isEditing && widget.editFrom!.data.filesName.isNotEmpty) ...[
+                spacing,
+                AllFilesExpandPanel(
+                  items: widget.editFrom!.data.filesName,
+                  prefixLength: widget.editFrom!.data.policyNumber.length,
+                ),
+              ],
+              spacing,
+              FileUploader(
+                onChanged: (value) => files = value,
+              ),
+            ],
+          ),
+          spacingVertical,
+          Center(
+            child: ElevatedButton(
+              onPressed: upload,
+              child: Text(isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน'),
+            ),
+          )
+        ],
       ),
     );
   }

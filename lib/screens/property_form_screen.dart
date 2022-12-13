@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:woot/models/property.dart';
+import 'package:woot/screens/policy_form_screen.dart';
+import 'package:woot/screens/search_policies_screen.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
 import '../constants/firestore_collection.dart';
@@ -11,21 +13,20 @@ import '../widgets/misc_widgets.dart';
 
 class PropertyFormScreen extends StatefulWidget {
   const PropertyFormScreen(
-      {this.editFrom,
-      required this.customerId,
-      required this.customerData,
-      super.key});
+      {this.editFrom, required this.customerId, this.customerData, super.key})
+      : assert(editFrom != null || customerData != null);
 
   final PropertyDocument? editFrom;
   final String customerId;
-  final Customer customerData;
+  final Customer? customerData;
 
   @override
   State<PropertyFormScreen> createState() => _PropertyFormScreenState();
 }
 
 class _PropertyFormScreenState extends State<PropertyFormScreen> {
-  PropertyType type = PropertyType.fire;
+  late PropertyType type = widget.editFrom?.data.type ?? PropertyType.fire;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,21 +40,26 @@ class _PropertyFormScreenState extends State<PropertyFormScreen> {
                 children: [
                   const TopicText('ประเภท'),
                   spacing,
-                  SizedBox(
-                    width: 150,
-                    child: DropdownButtonFormField(
-                      value: type,
-                      items: PropertyType.values
-                          .map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e.thai),
-                              ))
-                          .toList(),
-                      onChanged: (value) => setState(() {
-                        type = value!;
-                      }),
-                    ),
-                  ),
+                  widget.editFrom == null
+                      ? SizedBox(
+                          width: 150,
+                          child: DropdownButtonFormField(
+                            value: type,
+                            items: PropertyType.values
+                                .map((e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e.thai),
+                                    ))
+                                .toList(),
+                            onChanged: (value) => setState(() {
+                              type = value!;
+                            }),
+                          ),
+                        )
+                      : TextUneditable(
+                          width: 100,
+                          value: type.thai,
+                        ),
                 ],
               ),
               spacingVertical,
@@ -77,14 +83,11 @@ class _PropertyFormScreenState extends State<PropertyFormScreen> {
 
 class FirePropertyForm extends StatefulWidget {
   const FirePropertyForm(
-      {this.editFrom,
-      required this.customerId,
-      required this.customerData,
-      super.key});
+      {this.editFrom, required this.customerId, this.customerData, super.key});
 
   final PropertyDocument? editFrom;
   final String customerId;
-  final Customer customerData;
+  final Customer? customerData;
 
   @override
   State<FirePropertyForm> createState() => _FirePropertyFormState();
@@ -107,8 +110,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
   String upperFloor = '';
   String roofBeam = '';
   String roof = '';
-  int? buildingCount;
-  double? area;
+  String buildingCount = '';
   double? width;
   double? length;
   String occupancy = '';
@@ -118,7 +120,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
   bool get isEditing => widget.editFrom != null;
 
   void useCustomerAddress() {
-    final Customer e = widget.customerData;
+    final Customer e = widget.customerData!;
     province = e.province;
     district = e.district;
     subdistrict = e.subdistrict;
@@ -135,9 +137,9 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
     if (!formKey.currentState!.validate()) {
       return;
     }
-    formKey.currentState!.save();
 
     final property = FireProperty(
+      customerId: widget.customerId,
       province: province,
       district: district,
       subdistrict: subdistrict,
@@ -153,8 +155,8 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
       upperFloor: upperFloor,
       roofBeam: roofBeam,
       roof: roof,
-      buildingCount: buildingCount!,
-      area: area!,
+      buildingCount: buildingCount,
+      area: width! * length!,
       width: width!,
       length: length!,
       occupancy: occupancy,
@@ -170,9 +172,8 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                 }()
               : widget.editFrom!.reference.update(property.toJson()));
       if (!isEditing) {
-        formKey.currentState!.reset();
         // ignore: use_build_context_synchronously
-        Navigator.push(
+        Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => PropertyFormScreen(
@@ -191,6 +192,33 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
   }
 
   @override
+  void initState() {
+    if (isEditing) {
+      final FireProperty e = widget.editFrom!.data as FireProperty;
+
+      province = e.province;
+      district = e.district;
+      subdistrict = e.subdistrict;
+      zipcode = e.zipcode;
+      houseNumber = e.houseNumber;
+      buildingOrVillage = e.buildingOrVillage;
+      villageNumber = e.villageNumber;
+      alley = e.alley;
+      lane = e.lane;
+      road = e.road;
+      floorCount = e.floorCount;
+      externalWall = e.externalWall;
+      upperFloor = e.upperFloor;
+      roofBeam = e.roofBeam;
+      roof = e.roof;
+      buildingCount = e.buildingCount;
+      width = e.width;
+      length = e.length;
+    }
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Form(
       key: formKey,
@@ -203,7 +231,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
               TextInputField(
                 width: 100,
                 initialValue: houseNumber,
-                onSaved: (value) => houseNumber = value!,
+                onChanged: (value) => houseNumber = value!,
                 label: 'บ้านเลขที่',
                 key: UniqueKey(),
               ),
@@ -211,7 +239,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
               TextInputField(
                 width: 150,
                 initialValue: buildingOrVillage,
-                onSaved: (value) => buildingOrVillage = value!,
+                onChanged: (value) => buildingOrVillage = value!,
                 label: 'ตึก/หมู่บ้าน',
                 key: UniqueKey(),
               ),
@@ -219,7 +247,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
               TextInputField(
                 width: 50,
                 initialValue: villageNumber,
-                onSaved: (value) => villageNumber = value!,
+                onChanged: (value) => villageNumber = value!,
                 label: 'หมู่',
                 key: UniqueKey(),
               ),
@@ -227,7 +255,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
               TextInputField(
                 width: 130,
                 initialValue: alley,
-                onSaved: (value) => alley = value!,
+                onChanged: (value) => alley = value!,
                 label: 'ตรอก',
                 key: UniqueKey(),
               ),
@@ -235,7 +263,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
               TextInputField(
                 width: 130,
                 initialValue: lane,
-                onSaved: (value) => lane = value!,
+                onChanged: (value) => lane = value!,
                 label: 'ซอย',
                 key: UniqueKey(),
               ),
@@ -327,15 +355,9 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
               TextInputField(
                 width: 100,
                 initialValue: zipcode,
-                onSaved: (value) => zipcode = value!,
+                onChanged: (value) => zipcode = value!,
                 label: 'ไปรษณีย์',
-                validator: (value) {
-                  if (value!.length != 5 ||
-                      !RegExp(r'^[0-9]+$').hasMatch(value)) {
-                    return 'ไม่ถูกต้อง';
-                  }
-                  return null;
-                },
+                isOnlyNumber: true,
                 isRequire: true,
                 key: UniqueKey(),
               ),
@@ -343,18 +365,20 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
               TextInputField(
                 width: 200,
                 initialValue: road,
-                onSaved: (value) => road = value!,
+                onChanged: (value) => road = value!,
                 label: 'ถนน',
                 key: UniqueKey(),
               ),
-              spacing,
-              SizedBox(
-                width: 150,
-                child: ElevatedButton(
-                  onPressed: () => setState(useCustomerAddress),
-                  child: const Text('ใช้ที่อยู่ลูกค้า'),
+              if (!isEditing) ...[
+                spacing,
+                SizedBox(
+                  width: 150,
+                  child: ElevatedButton(
+                    onPressed: () => setState(useCustomerAddress),
+                    child: const Text('ใช้ที่อยู่ลูกค้า'),
+                  ),
                 ),
-              )
+              ],
             ],
           ),
           spacingVertical,
@@ -363,26 +387,124 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
               const TopicText('รายละเอียด'),
               spacing,
               TableInputFields(
-                headers: const ['จำนวนชั้น', 'ฝาผนังด้านนอก', 'พื้นชั้นบน'],
+                headers: const [
+                  'จำนวนชั้น',
+                  'ฝาผนังด้านนอก',
+                  'พื้นชั้นบน',
+                  'โครงหลังคา',
+                  'หลังคา',
+                ],
                 fields: [
-                  TextFormField(
-                    onSaved: (value) => floorCount = int.parse(value!),
-                    textAlign: TextAlign.center,
+                  TextInputField(
+                    width: 120,
+                    initialValue: floorCount?.toString(),
+                    isCenter: true,
+                    isOnlyDigit: true,
+                    isRequire: true,
+                    onChanged: (value) => floorCount = int.parse(value!),
                   ),
-                  TextFormField(
-                    onSaved: (value) => externalWall = value!,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'asdad';
-                      }
-                      return null;
-                    },
+                  TextInputField(
+                    width: 130,
+                    initialValue: externalWall,
+                    isCenter: true,
+                    isRequire: true,
+                    onChanged: (value) => externalWall = value!,
                   ),
-                  TextFormField(
-                    onSaved: (value) => upperFloor = value!,
+                  TextInputField(
+                    width: 130,
+                    initialValue: upperFloor,
+                    isCenter: true,
+                    isRequire: true,
+                    onChanged: (value) => upperFloor = value!,
+                  ),
+                  TextInputField(
+                    width: 130,
+                    initialValue: roofBeam,
+                    isCenter: true,
+                    isRequire: true,
+                    onChanged: (value) => roofBeam = value!,
+                  ),
+                  TextInputField(
+                    width: 130,
+                    initialValue: roof,
+                    isCenter: true,
+                    isRequire: true,
+                    onChanged: (value) => roof = value!,
                   ),
                 ],
-              )
+              ),
+            ],
+          ),
+          spacingVertical,
+          Row(
+            children: [
+              const SizedBox(width: 150),
+              spacing,
+              TableInputFields(
+                headers: const [
+                  'จำนวนคูหาหรือหลัง',
+                  'สถานที่ใช้เป็น',
+                ],
+                fields: [
+                  TextInputField(
+                    width: 150,
+                    initialValue: buildingCount,
+                    isCenter: true,
+                    isRequire: true,
+                    onChanged: (value) => buildingCount = value!,
+                  ),
+                  TextInputField(
+                    width: 200,
+                    initialValue: occupancy,
+                    isCenter: true,
+                    isRequire: true,
+                    onChanged: (value) => occupancy = value!,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          spacingVertical,
+          Row(
+            children: [
+              const SizedBox(width: 150),
+              spacing,
+              TableInputFields(
+                headers: const [
+                  'กว้าง (เมตร)',
+                  'ยาว (เมตร)',
+                  'พื้นที่ (ตารางเมตร)',
+                ],
+                fields: [
+                  TextInputField(
+                    width: 150,
+                    initialValue: width?.toString(),
+                    isCenter: true,
+                    isOnlyDigit: true,
+                    isRequire: true,
+                    onChanged: (value) => setState(() {
+                      width = double.parse(value!);
+                    }),
+                  ),
+                  TextInputField(
+                    width: 150,
+                    initialValue: length?.toString(),
+                    isCenter: true,
+                    isOnlyDigit: true,
+                    isRequire: true,
+                    onChanged: (value) => setState(() {
+                      length = double.parse(value!);
+                    }),
+                  ),
+                  TextUneditable(
+                    width: 150,
+                    isCenter: true,
+                    value: width != null && length != null
+                        ? (width! * length!).toString()
+                        : '',
+                  ),
+                ],
+              ),
             ],
           ),
           spacingVertical,
@@ -391,11 +513,15 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
             children: [
               if (isEditing) ...[
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SearchPoliciesScreen(),
+                      )),
                   child: const SizedBox(
                     width: 120,
                     child: Text(
-                      'ดูทรัพย์สินทั้งหมด',
+                      'ดูกรมธรรม์ทั้งหมด',
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -405,15 +531,16 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PropertyFormScreen(
+                        builder: (context) => PolicyFormScreen(
+                          propertyId: widget.editFrom!.id,
                           customerId: widget.customerId,
-                          customerData: widget.customerData,
+                          type: PropertyType.fire,
                         ),
                       )),
                   child: const SizedBox(
                     width: 120,
                     child: Text(
-                      'เพิ่มทรัพย์สิน',
+                      'เพิ่มกรมธรรม์',
                       textAlign: TextAlign.center,
                     ),
                   ),

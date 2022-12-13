@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:woot/constants/firestore_collection.dart';
 import 'package:woot/constants/geo_data.dart';
 import 'package:woot/models/customer.dart';
-import 'package:woot/screens/policy_form_screen.dart';
 import 'package:woot/screens/property_form_screen.dart';
+import 'package:woot/screens/search_policies_screen.dart';
+import 'package:woot/screens/search_properties_screen.dart';
 import 'package:woot/utils/ui_util.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
 import '../constants/constant.dart';
-import '../utils/validator.dart';
 import '../widgets/misc_widgets.dart';
 
 class CustomerFormScreen extends StatefulWidget {
@@ -81,11 +81,10 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                   newDocRef = await FirestoreCollection.customers
                       .add(customer.toJson());
                 }()
-              : widget.editFrom!.reference.update(customer.toJson()));
+              : widget.editFrom!.reference.set(customer.toJson()));
       if (!isEditing) {
-        formKey.currentState!.reset();
         // ignore: use_build_context_synchronously
-        Navigator.push(
+        Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => CustomerFormScreen(
@@ -177,7 +176,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         TextInputField(
                           width: 320,
                           initialValue: juristicName,
-                          onSaved: (value) => juristicName = value!,
+                          onChanged: (value) => juristicName = value!,
                           isRequire: true,
                         ),
                       ],
@@ -191,13 +190,15 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextInputField(
                         width: 250,
                         initialValue: identificationNumber,
-                        onSaved: (value) => identificationNumber = value!,
+                        onChanged: (value) => identificationNumber = value!,
                         validator: (value) {
                           if (value!.length != 13) {
                             return 'ความยาวไม่ถูกต้อง';
                           }
+                          return null;
                         },
                         isRequire: true,
+                        isOnlyDigit: true,
                       ),
                     ],
                   ),
@@ -226,7 +227,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         label: 'ชื่อจริง',
                         width: 250,
                         initialValue: firstname,
-                        onSaved: (value) => firstname = value!,
+                        onChanged: (value) => firstname = value!,
                         isRequire: true,
                       ),
                       spacing,
@@ -234,7 +235,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         label: 'นามสกุล',
                         width: 250,
                         initialValue: surname,
-                        onSaved: (value) => surname = value!,
+                        onChanged: (value) => surname = value!,
                         isRequire: true,
                       ),
                     ],
@@ -247,35 +248,35 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextInputField(
                         width: 100,
                         initialValue: houseNumber,
-                        onSaved: (value) => houseNumber = value!,
+                        onChanged: (value) => houseNumber = value!,
                         label: 'บ้านเลขที่',
                       ),
                       spacing,
                       TextInputField(
                         width: 150,
                         initialValue: buildingOrVillage,
-                        onSaved: (value) => buildingOrVillage = value!,
+                        onChanged: (value) => buildingOrVillage = value!,
                         label: 'ตึก/หมู่บ้าน',
                       ),
                       spacing,
                       TextInputField(
                         width: 50,
                         initialValue: villageNumber,
-                        onSaved: (value) => villageNumber = value!,
+                        onChanged: (value) => villageNumber = value!,
                         label: 'หมู่',
                       ),
                       spacing,
                       TextInputField(
                         width: 130,
                         initialValue: alley,
-                        onSaved: (value) => alley = value!,
+                        onChanged: (value) => alley = value!,
                         label: 'ตรอก',
                       ),
                       spacing,
                       TextInputField(
                         width: 130,
                         initialValue: lane,
-                        onSaved: (value) => lane = value!,
+                        onChanged: (value) => lane = value!,
                         label: 'ซอย',
                       ),
                     ],
@@ -366,22 +367,22 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextInputField(
                         width: 100,
                         initialValue: zipcode,
-                        onSaved: (value) => zipcode = value!,
+                        onChanged: (value) => zipcode = value!,
                         label: 'ไปรษณีย์',
                         validator: (value) {
-                          if (value!.length != 5 ||
-                              !RegExp(r'^[0-9]+$').hasMatch(value)) {
+                          if (value!.length != 5) {
                             return 'ไม่ถูกต้อง';
                           }
                           return null;
                         },
                         isRequire: true,
+                        isOnlyDigit: true,
                       ),
                       spacing,
                       TextInputField(
                         width: 200,
                         initialValue: road,
-                        onSaved: (value) => road = value!,
+                        onChanged: (value) => road = value!,
                         label: 'ถนน',
                       ),
                     ],
@@ -394,7 +395,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextInputField(
                         width: 150,
                         initialValue: phone,
-                        onSaved: (value) => phone = value!,
+                        onChanged: (value) => phone = value!,
                         label: 'เบอร์โทรศัพท์',
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -427,7 +428,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextInputField(
                         width: 250,
                         initialValue: email,
-                        onSaved: (value) => email = value!,
+                        onChanged: (value) => email = value!,
                         label: 'อีเมล',
                       ),
                     ],
@@ -438,7 +439,12 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                     children: [
                       if (isEditing) ...[
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SearchPropertiesScreen(
+                                    customerId: widget.editFrom!.id),
+                              )),
                           child: const SizedBox(
                             width: 120,
                             child: Text(

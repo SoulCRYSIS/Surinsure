@@ -1,13 +1,13 @@
-import 'package:woot/constants/firestore_collection.dart';
-import 'package:woot/models/customer.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
+import 'connection_util.dart';
 
 class ServerData {
-  static Stream<List<Customer>>? _customersStream;
-  static Stream<List<Customer>> get customersStream => _customersStream!;
+  ServerData._();
 
-  // fine to call multiple times
-  static void initCustomersStream() {
-    _customersStream ??= FirestoreCollection.customers.snapshots().asyncMap(
-        (event) => event.docs.map((e) => Customer.fromJson(e.data())).toList());
+  static Future<void> uploadFile(PlatformFile file, String name) async {
+    await ConnectionUtil.setTimeout(
+        3, FirebaseStorage.instance.ref('uploads/$name').putData(file.bytes!));
   }
 }

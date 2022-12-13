@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:intl/intl.dart';
 import 'package:woot/utils/validator.dart';
 import 'package:woot/widgets/misc_widgets.dart';
 
@@ -22,23 +23,79 @@ class TopicText extends StatelessWidget {
   }
 }
 
-class TextInputField extends StatelessWidget {
-  const TextInputField({
-    this.label,
-    this.initialValue,
-    required this.width,
+class DateInputField extends StatelessWidget {
+  const DateInputField({
     required this.onSaved,
-    this.validator,
+    this.initialValue,
+    this.label,
     this.isRequire = false,
     super.key,
   });
 
+  final String? label;
+  final bool isRequire;
+  final DateTime? initialValue;
+  final void Function(DateTime? value) onSaved;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 150,
+      child: TextFormField(
+        initialValue: initialValue == null
+            ? null
+            : DateFormat('dd/MM/').format(initialValue!) +
+                (initialValue!.year + 543).toString(),
+        decoration: InputDecoration(labelText: label, hintText: 'xx/xx/25xx'),
+        onSaved: (newValue) {
+          if (newValue == null) {
+            onSaved(null);
+            return;
+          }
+          var splited = newValue.split('/');
+          onSaved(DateTime(
+            int.parse(splited[2]) - 543,
+            int.parse(splited[1]),
+            int.parse(splited[0]),
+          ));
+        },
+        validator: (value) {
+          if (isRequire && (value == null || value.isEmpty)) {
+            return 'จำเป็น';
+          }
+          if (!RegExp(r'^\d\d\/\d\d\/\d\d\d\d$').hasMatch(value!)) {
+            return 'รูปแบบผิด';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+}
+
+class TextInputField extends StatelessWidget {
+  const TextInputField({
+    this.label,
+    this.initialValue,
+    this.isOnlyDigit = false,
+    this.isOnlyNumber = false,
+    this.width,
+    required this.onChanged,
+    this.validator,
+    this.isRequire = false,
+    this.isCenter = false,
+    super.key,
+  }) : assert(!(isOnlyDigit && isOnlyNumber));
+
   final String? initialValue;
   final String? label;
   final bool isRequire;
-  final double width;
+  final bool isOnlyDigit;
+  final bool isOnlyNumber;
+  final double? width;
+  final bool isCenter;
 
-  final void Function(String? value) onSaved;
+  final void Function(String? value) onChanged;
   final String? Function(String? value)? validator;
 
   @override
@@ -47,10 +104,15 @@ class TextInputField extends StatelessWidget {
       width: width,
       child: TextFormField(
         initialValue: initialValue,
+        textAlign: isCenter ? TextAlign.center : TextAlign.start,
         decoration: InputDecoration(labelText: label),
-        onSaved: onSaved,
+        onChanged: onChanged,
         validator: isRequire ? Validator.notEmpty(validator) : validator,
-        //inputFormatters: [],
+        inputFormatters: isOnlyDigit
+            ? [FilteringTextInputFormatter.digitsOnly]
+            : isOnlyNumber
+                ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$'))]
+                : null,
       ),
     );
   }
@@ -87,11 +149,40 @@ class TextCopyable extends StatelessWidget {
   }
 }
 
+class TextUneditable extends StatelessWidget {
+  const TextUneditable({
+    required this.value,
+    required this.width,
+    this.isCenter = false,
+    super.key,
+  });
+
+  final String value;
+  final double width;
+  final bool isCenter;
+
+  @override
+  Widget build(BuildContext context) {
+    return FieldBorder(
+      width: width,
+      color: Colors.grey[300],
+      child: Center(
+        child: Text(
+          value,
+          textAlign: isCenter ? TextAlign.center : TextAlign.start,
+        ),
+      ),
+    );
+  }
+}
+
 class FieldBorder extends StatelessWidget {
-  const FieldBorder({required this.child, required this.width, super.key});
+  const FieldBorder(
+      {required this.child, required this.width, this.color, super.key});
 
   final Widget child;
   final double width;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +193,7 @@ class FieldBorder extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey),
         borderRadius: const BorderRadius.all(Radius.circular(5)),
+        color: color,
       ),
       child: child,
     );
@@ -325,7 +417,7 @@ class TableInputFields extends StatelessWidget {
       {super.key, required this.headers, required this.fields});
 
   final List<String> headers;
-  final List<TextFormField> fields;
+  final List<Widget> fields;
 
   @override
   Widget build(BuildContext context) {
@@ -335,9 +427,6 @@ class TableInputFields extends StatelessWidget {
               errorStyle: const TextStyle(fontSize: 0.2),
               enabledBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.transparent)),
-              border: const OutlineInputBorder(
-                borderSide: BorderSide(strokeAlign: StrokeAlign.outside),
-              ),
             ),
       ),
       child: Table(
@@ -347,7 +436,7 @@ class TableInputFields extends StatelessWidget {
           color: Colors.grey,
         ),
         columnWidths:
-            List.filled(headers.length, const FixedColumnWidth(150)).asMap(),
+            List.filled(headers.length, const IntrinsicColumnWidth()).asMap(),
         children: [
           TableRow(
               children: headers
@@ -355,7 +444,13 @@ class TableInputFields extends StatelessWidget {
                         child: Container(
                           height: 32,
                           padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Center(child: Text(e)),
+                          child: Center(
+                            child: Text(
+                              e,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
                         ),
                       ))
                   .toList()),
