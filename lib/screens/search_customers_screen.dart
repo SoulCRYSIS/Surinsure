@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:woot/constants/constant.dart';
 import 'package:woot/constants/firestore_collection.dart';
 import 'package:woot/constants/geo_data.dart';
 import 'package:woot/screens/customer_form_screen.dart';
@@ -31,15 +32,27 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
   String district = '';
   String subdistrict = '';
   String zipcode = '';
+  String identificationNumber = '';
 
-  List<CustomerDocument> docs = [];
+  List<CustomerDocument>? docs;
+
+  void resetFields() {
+    assuredType = '';
+    namePrefix = '';
+    firstname = '';
+    surname = '';
+    juristicName = '';
+    province = '';
+    district = '';
+    subdistrict = '';
+    zipcode = '';
+    identificationNumber = '';
+  }
 
   Future<void> search() async {
     if (!formKey.currentState!.validate()) {
       return;
     }
-
-    const lastChar = '\uf8ff';
 
     Query<Map<String, dynamic>> query = FirestoreCollection.customers;
     if (assuredType.isNotEmpty) {
@@ -47,21 +60,6 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
     }
     if (namePrefix.isNotEmpty) {
       query = query.where('namePrefix', isEqualTo: namePrefix);
-    }
-    if (firstname.isNotEmpty) {
-      query = query
-          .where('firstname', isGreaterThanOrEqualTo: firstname)
-          .where('firstname', isLessThan: firstname + lastChar);
-    }
-    if (surname.isNotEmpty) {
-      query = query
-          .where('surname', isGreaterThanOrEqualTo: surname)
-          .where('surname', isLessThan: surname + lastChar);
-    }
-    if (juristicName.isNotEmpty) {
-      query = query
-          .where('juristicName', isGreaterThanOrEqualTo: juristicName)
-          .where('juristicName', isLessThan: juristicName + lastChar);
     }
     if (province.isNotEmpty) {
       query = query.where('province', isEqualTo: province);
@@ -75,6 +73,10 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
     if (zipcode.isNotEmpty) {
       query = query.where('zipcode', isEqualTo: zipcode);
     }
+    if (identificationNumber.isNotEmpty) {
+      query =
+          query.where('identificationNumber', isEqualTo: identificationNumber);
+    }
     try {
       await UiUtil.loadingScreen(context, timeoutSecond: 3, future: () async {
         docs = (await query.get())
@@ -82,7 +84,24 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
             .map((e) => CustomerDocument.fromDoc(e))
             .toList();
       }());
+      if (firstname.isNotEmpty) {
+        docs = docs!
+            .where((element) => element.data.firstname.contains(firstname))
+            .toList();
+      }
+      if (surname.isNotEmpty) {
+        docs = docs!
+            .where((element) => element.data.surname.contains(surname))
+            .toList();
+      }
+      if (juristicName.isNotEmpty && assuredType == 'นิติบุคคล') {
+        docs = docs!
+            .where(
+                (element) => element.data.juristicName!.contains(juristicName))
+            .toList();
+      }
     } catch (e) {
+      debugPrint(e.toString());
       UiUtil.snackbar(context, e.toString());
     }
     setState(() {});
@@ -91,150 +110,247 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ข้อมูลลูกค้า')),
+      appBar: AppBar(
+        title: const Text('ข้อมูลลูกค้า'),
+        actions: const [HomeButton()],
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Form(
-                key: formKey,
-                child: Column(
-                  children: [
-                    Text(
-                      'ตัวกรอง',
-                      style: Theme.of(context).textTheme.headline1,
-                    ),
-                    spacingVertical,
-                    DropdownInputField(
-                      value: province,
-                      width: 200,
-                      label: 'จังหวัด',
-                      isSearchable: true,
-                      items: GeoData.changwats,
-                      onEditingComplete: (value) {
-                        if (province != value) {
-                          setState(() {
-                            district = '';
-                            subdistrict = '';
-                            province = value!;
-                          });
-                        }
-                      },
-                      validator: (value) {
-                        if (subdistrict.isEmpty) {
-                          return null;
-                        }
-                        if (!GeoData.changwats.contains(province)) {
-                          return 'ไม่พบชื่อนี้';
-                        }
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Form(
+              key: formKey,
+              child: Column(
+                children: [
+                  Text(
+                    'ตัวกรอง',
+                    style: Theme.of(context).textTheme.headline1,
+                  ),
+                  spacingVertical,
+                  DropdownInputField(
+                    width: 200,
+                    items: Constant.assuredTypes,
+                    label: 'ประเภท',
+                    onEditingComplete: (value) => setState(() {
+                      assuredType = value!;
+                    }),
+                  ),
+                  spacingVertical,
+                  TextInputField(
+                    width: 200,
+                    label: 'บัตรประชาชน',
+                    onlyDigit: true,
+                    onChanged: (value) {
+                      firstname = value!;
+                    },
+                    validator: (value) {
+                      if (value!.isEmpty) {
                         return null;
-                      },
-                    ),
-                    spacingVertical,
-                    DropdownInputField(
-                      value: district,
-                      width: 200,
-                      label: 'เขต/อำเภอ',
-                      isSearchable: true,
-                      items: GeoData.amphoes[province] ?? [],
-                      onEditingComplete: (value) {
-                        if (district != value) {
-                          setState(() {
-                            subdistrict = '';
-                            district = value!;
-                          });
-                        }
-                      },
-                      validator: (value) {
-                        if (district.isEmpty ||
-                            GeoData.amphoes[province] == null) {
-                          return null;
-                        }
-                        if (!GeoData.amphoes[province]!.contains(district)) {
-                          return 'ไม่พบชื่อนี้';
-                        }
+                      }
+                      if (value.length != 13) {
+                        return 'ความยาวไม่ถูกต้อง';
+                      }
+                    },
+                  ),
+                  spacingVertical,
+                  TextInputField(
+                    width: 200,
+                    label: 'ชื่อจริง',
+                    onChanged: (value) {
+                      firstname = value!;
+                    },
+                  ),
+                  spacingVertical,
+                  TextInputField(
+                    width: 200,
+                    label: 'นามสกุล',
+                    onChanged: (value) => surname = value!,
+                  ),
+                  spacingVertical,
+                  DropdownInputField(
+                    value: province,
+                    width: 200,
+                    label: 'จังหวัด',
+                    isSearchable: true,
+                    items: GeoData.changwats,
+                    onEditingComplete: (value) {
+                      if (province != value) {
+                        setState(() {
+                          district = '';
+                          subdistrict = '';
+                          province = value!;
+                        });
+                      }
+                    },
+                    validator: (value) {
+                      if (subdistrict.isEmpty) {
                         return null;
-                      },
-                    ),
-                    spacingVertical,
-                    DropdownInputField(
-                      value: subdistrict,
-                      width: 200,
-                      label: 'แขวง/ตำบล',
-                      isSearchable: true,
-                      items: GeoData.tambons[province]?[district] ?? [],
-                      onEditingComplete: (value) => setState(() {
-                        subdistrict = value!;
-                      }),
-                      validator: (value) {
-                        if (subdistrict.isEmpty ||
-                            GeoData.tambons[province]?[district] == null) {
-                          return null;
-                        }
-                        if (!GeoData.tambons[province]![district]!
-                            .contains(subdistrict)) {
-                          return 'ไม่พบชื่อนี้';
-                        }
+                      }
+                      if (!GeoData.changwats.contains(province)) {
+                        return 'ไม่พบชื่อนี้';
+                      }
+                      return null;
+                    },
+                  ),
+                  spacingVertical,
+                  DropdownInputField(
+                    value: district,
+                    width: 200,
+                    label: 'เขต/อำเภอ',
+                    isSearchable: true,
+                    items: GeoData.amphoes[province] ?? [],
+                    onEditingComplete: (value) {
+                      if (district != value) {
+                        setState(() {
+                          subdistrict = '';
+                          district = value!;
+                        });
+                      }
+                    },
+                    validator: (value) {
+                      if (district.isEmpty ||
+                          GeoData.amphoes[province] == null) {
                         return null;
-                      },
-                    ),
-                    ElevatedButton(
-                      onPressed: search,
-                      child: const Text('ค้นหา'),
+                      }
+                      if (!GeoData.amphoes[province]!.contains(district)) {
+                        return 'ไม่พบชื่อนี้';
+                      }
+                      return null;
+                    },
+                  ),
+                  spacingVertical,
+                  DropdownInputField(
+                    value: subdistrict,
+                    width: 200,
+                    label: 'แขวง/ตำบล',
+                    isSearchable: true,
+                    items: GeoData.tambons[province]?[district] ?? [],
+                    onEditingComplete: (value) => setState(() {
+                      subdistrict = value!;
+                    }),
+                    validator: (value) {
+                      if (subdistrict.isEmpty ||
+                          GeoData.tambons[province]?[district] == null) {
+                        return null;
+                      }
+                      if (!GeoData.tambons[province]![district]!
+                          .contains(subdistrict)) {
+                        return 'ไม่พบชื่อนี้';
+                      }
+                      return null;
+                    },
+                  ),
+                  spacingVertical,
+                  TextInputField(
+                    width: 200,
+                    label: 'รหัสไปรษณีย์',
+                    onlyDigit: true,
+                    onChanged: (value) => zipcode = value!,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return null;
+                      }
+                      if (value.length != 5) {
+                        return 'ความยาวไม่ถูกต้อง';
+                      }
+                      return null;
+                    },
+                  ),
+                  if (assuredType == 'นิติบุคคล') ...[
+                    spacingVertical,
+                    TextInputField(
+                      width: 200,
+                      label: 'ชื่อนิติบุคคล',
+                      onChanged: (value) => juristicName = value!,
                     ),
                   ],
-                ),
-              ),
-              spacing,
-              const VerticalDivider(thickness: 1),
-              spacing,
-              SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: DataTable(
-                  showCheckboxColumn: false,
-                  sortColumnIndex: sortColumnIndex,
-                  sortAscending: sortAscending,
-                  columnSpacing: 10,
-                  columns: Customer.headers
-                      .map(
-                        (e) => DataColumn(
-                          label: Text(e),
-                          onSort: (columnIndex, ascending) => setState(() {
-                            sortColumnIndex = columnIndex;
-                            sortAscending = ascending;
-                            docs.sort(
-                              (a, b) =>
-                                  (ascending ? 1 : -1) *
-                                  a.data.asTextRow[columnIndex]
-                                      .compareTo(b.data.asTextRow[columnIndex]),
-                            );
-                          }),
+                  spacingVertical,
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            formKey.currentState!.reset();
+                            resetFields();
+                            setState(() {});
+                          },
+                          child: const Text('ล้าง'),
                         ),
-                      )
-                      .toList(),
-                  rows: docs
-                      .map((doc) => DataRow(
-                            onSelectChanged: (value) {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        CustomerFormScreen(editFrom: doc),
-                                  ));
-                            },
-                            cells: doc.data.asTextRow
-                                .map((e) => DataCell(Text(e)))
-                                .toList(),
-                          ))
-                      .toList(),
-                ),
+                      ),
+                      spacing,
+                      SizedBox(
+                        width: 80,
+                        child: ElevatedButton(
+                          onPressed: search,
+                          child: const Text('ค้นหา'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            spacing,
+            const VerticalDivider(thickness: 1),
+            spacing,
+            Expanded(
+              child: docs == null
+                  ? Container()
+                  : docs!.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'ไม่พบผลการค้นหา',
+                            style: TextStyle(fontSize: 24, color: Colors.grey),
+                          ),
+                        )
+                      : BidirectionScroll(
+                          child: DataTable(
+                            showCheckboxColumn: false,
+                            sortColumnIndex: sortColumnIndex,
+                            sortAscending: sortAscending,
+                            columnSpacing: 10,
+                            columns: Customer.headers
+                                .map(
+                                  (e) => DataColumn(
+                                    label: Text(e),
+                                    onSort: (columnIndex, ascending) =>
+                                        setState(() {
+                                      sortColumnIndex = columnIndex;
+                                      sortAscending = ascending;
+                                      docs!.sort(
+                                        (a, b) =>
+                                            (ascending ? 1 : -1) *
+                                            a.data.asTextRow[columnIndex]
+                                                .compareTo(b.data
+                                                    .asTextRow[columnIndex]),
+                                      );
+                                    }),
+                                  ),
+                                )
+                                .toList(),
+                            rows: docs!
+                                .map((doc) => DataRow(
+                                      onSelectChanged: (value) {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  CustomerFormScreen(
+                                                      editFrom: doc),
+                                            ));
+                                      },
+                                      cells: doc.data.asTextRow
+                                          .map((e) => DataCell(Text(e)))
+                                          .toList(),
+                                    ))
+                                .toList(),
+                          ),
+                        ),
+            ),
+          ],
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:intl/intl.dart';
 import 'package:woot/utils/server_data.dart';
+import 'package:woot/utils/ui_util.dart';
 import 'package:woot/utils/validator.dart';
 import 'package:woot/widgets/misc_widgets.dart';
 
@@ -51,7 +52,17 @@ class DateInputField extends StatelessWidget {
             : DateFormat('dd/MM/').format(initialValue!) +
                 (initialValue!.year + 543).toString(),
         decoration: InputDecoration(
-            labelText: label,
+            label: Text.rich(
+              TextSpan(
+                children: [
+                  if (isRequire)
+                    TextSpan(
+                        text: '*',
+                        style: TextStyle(color: Theme.of(context).errorColor)),
+                  if (label != null) TextSpan(text: label),
+                ],
+              ),
+            ),
             hintText: 'dd/mm/yyyy',
             suffixIcon: const Icon(
               Icons.calendar_month,
@@ -86,23 +97,23 @@ class TextInputField extends StatelessWidget {
   const TextInputField({
     this.label,
     this.initialValue,
-    this.isOnlyDigit = false,
-    this.isOnlyNumber = false,
+    this.onlyDigit = false,
+    this.onlyNumber = false,
     this.width,
     required this.onChanged,
     this.validator,
-    this.isRequire = false,
-    this.isCenter = false,
+    this.require = false,
+    this.center = false,
     super.key,
-  }) : assert(!(isOnlyDigit && isOnlyNumber));
+  }) : assert(!(onlyDigit && onlyNumber));
 
   final String? initialValue;
   final String? label;
-  final bool isRequire;
-  final bool isOnlyDigit;
-  final bool isOnlyNumber;
+  final bool require;
+  final bool onlyDigit;
+  final bool onlyNumber;
   final double? width;
-  final bool isCenter;
+  final bool center;
 
   final void Function(String? value) onChanged;
   final String? Function(String? value)? validator;
@@ -113,13 +124,25 @@ class TextInputField extends StatelessWidget {
       width: width,
       child: TextFormField(
         initialValue: initialValue,
-        textAlign: isCenter ? TextAlign.center : TextAlign.start,
-        decoration: InputDecoration(labelText: label),
+        textAlign: center ? TextAlign.center : TextAlign.start,
+        decoration: InputDecoration(
+          label: Text.rich(
+            TextSpan(
+              children: [
+                if (require)
+                  TextSpan(
+                      text: '*',
+                      style: TextStyle(color: Theme.of(context).errorColor)),
+                if (label != null) TextSpan(text: label),
+              ],
+            ),
+          ),
+        ),
         onChanged: onChanged,
-        validator: isRequire ? Validator.notEmpty(validator) : validator,
-        inputFormatters: isOnlyDigit
+        validator: require ? Validator.notEmpty(validator) : validator,
+        inputFormatters: onlyDigit
             ? [FilteringTextInputFormatter.digitsOnly]
-            : isOnlyNumber
+            : onlyNumber
                 ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$'))]
                 : null,
       ),
@@ -145,7 +168,10 @@ class TextCopyable extends StatelessWidget {
       child: Row(
         children: [
           InkWell(
-            onTap: () => Clipboard.setData(ClipboardData(text: value)),
+            onTap: () {
+              UiUtil.snackbar(context, 'Copied', isError: false);
+              Clipboard.setData(ClipboardData(text: value));
+            },
             child: const Icon(Icons.copy),
           ),
           spacing,
@@ -249,7 +275,20 @@ class DropdownInputField extends StatelessWidget {
                 debounceDuration: const Duration(milliseconds: 100),
                 textFieldConfiguration: TextFieldConfiguration(
                   controller: textEditingController,
-                  decoration: InputDecoration(labelText: label),
+                  decoration: InputDecoration(
+                    label: Text.rich(
+                      TextSpan(
+                        children: [
+                          if (isRequire)
+                            TextSpan(
+                                text: '*',
+                                style: TextStyle(
+                                    color: Theme.of(context).errorColor)),
+                          if (label != null) TextSpan(text: label),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 suggestionsCallback: (pattern) =>
                     items.where((item) => item.contains(pattern)),
@@ -273,7 +312,20 @@ class DropdownInputField extends StatelessWidget {
             )
           : DropdownButtonFormField<String>(
               value: value,
-              decoration: InputDecoration(labelText: label),
+              decoration: InputDecoration(
+                label: Text.rich(
+                  TextSpan(
+                    children: [
+                      if (isRequire)
+                        TextSpan(
+                            text: '*',
+                            style:
+                                TextStyle(color: Theme.of(context).errorColor)),
+                      if (label != null) TextSpan(text: label),
+                    ],
+                  ),
+                ),
+              ),
               hint: hint == null ? null : Text(hint!),
               items: items
                   .map(
@@ -445,6 +497,7 @@ class TableInputFields extends StatelessWidget {
                   color: Theme.of(context).errorColor,
                 ),
               ),
+              floatingLabelBehavior: FloatingLabelBehavior.never,
               errorStyle: const TextStyle(fontSize: 0.2),
               enabledBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.transparent)),

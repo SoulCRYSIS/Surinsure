@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:woot/constants/firestore_collection.dart';
 import 'package:woot/models/policy.dart';
 import 'package:woot/models/property.dart';
@@ -38,9 +38,11 @@ class _PolicyFormScreenState extends State<PolicyFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: widget.editFrom == null
-              ? const Text('เพิ่มกรมธรรม์')
-              : const Text('แก้ไขกรมธรรม์')),
+        title: widget.editFrom == null
+            ? const Text('เพิ่มกรมธรรม์')
+            : const Text('แก้ไขกรมธรรม์'),
+        actions: const [HomeButton()],
+      ),
       body: Center(
         child: BidirectionScroll(
           child: BlockBorder(
@@ -87,6 +89,7 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
   double? duty;
   double? tax;
   String? company;
+  double? premiumDiscountPercent;
 
   double? buildingFund;
   double? furnitureFund;
@@ -95,9 +98,11 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
   double? machineFund;
   double? otherFund;
 
+  bool isPaid = false;
+  DateTime? paymentDate;
+
   List<PlatformFile> files = [];
   bool isSelectedBuildingFurniture = false;
-  List<String> allCompanies = ['วิริยะประกันภัย', 'กรุงเทพประกันภัย'];
 
   final formKey = GlobalKey<FormState>();
 
@@ -146,6 +151,9 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
       stockFund: stockFund ?? 0,
       machineFund: machineFund ?? 0,
       otherFund: otherFund ?? 0,
+      premiumDiscountPercent: premiumDiscountPercent ?? 0,
+      isPaid: isPaid,
+      paymentDate: paymentDate,
     );
 
     try {
@@ -160,9 +168,8 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
         }(),
       );
       if (!isEditing) {
-        formKey.currentState!.reset();
         // ignore: use_build_context_synchronously
-        Navigator.push(
+        Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => PolicyFormScreen(
@@ -183,8 +190,7 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
         // ignore: use_build_context_synchronously
         UiUtil.snackbar(context, 'บันทึกข้อมูลสำเร็จ', isError: false);
       }
-    } catch (e, s) {
-      debugPrintStack(stackTrace: s);
+    } catch (e) {
       UiUtil.snackbar(context, e.toString());
     }
   }
@@ -202,12 +208,16 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
       duty = e.duty;
       tax = e.tax;
       company = e.company;
+      buildingFurnitureFund = e.buildingFurnitureFund;
       buildingFund = e.buildingFund;
       furnitureFund = e.furnitureFund;
       stockFund = e.stockFund;
       machineFund = e.machineFund;
       otherFund = e.otherFund;
       isSelectedBuildingFurniture = buildingFurnitureFund != 0;
+      premiumDiscountPercent = e.premiumDiscountPercent;
+      isPaid = e.isPaid;
+      paymentDate = e.paymentDate;
     }
     super.initState();
   }
@@ -231,7 +241,7 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                   : TextInputField(
                       width: 300,
                       onChanged: (value) => policyNumber = value!,
-                      isRequire: true,
+                      require: true,
                       validator: (value) {
                         if (value!.contains('\\') || value.contains('.')) {
                           return 'รูปแบบไม่ถูกต้อง';
@@ -256,7 +266,7 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                       width: 200,
                       isRequire: true,
                       onEditingComplete: (value) => company = value!,
-                      items: allCompanies,
+                      items: ServerData.insuranceCompanies,
                     ),
             ],
           ),
@@ -300,60 +310,6 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                 isRequire: true,
                 onSaved: (value) => policyIssueDate = value!,
               ),
-            ],
-          ),
-          spacingVertical,
-          Row(
-            children: [
-              const TopicText('เบี้ยประกันภัย'),
-              spacing,
-              TableInputFields(
-                headers: const ['เบี้ยประกันสุทธิ', 'อากร', 'ภาษี', 'เบี้ยรวม'],
-                fields: [
-                  TextInputField(
-                    initialValue: netPremium?.toStringAsFixed(2),
-                    isCenter: true,
-                    isOnlyNumber: true,
-                    isRequire: true,
-                    width: 150,
-                    onChanged: (value) => setState(
-                      () {
-                        netPremium = double.parse(value!);
-                      },
-                    ),
-                  ),
-                  TextInputField(
-                    initialValue: duty?.toStringAsFixed(2),
-                    isCenter: true,
-                    isOnlyNumber: true,
-                    isRequire: true,
-                    width: 150,
-                    onChanged: (value) => setState(
-                      () {
-                        duty = double.parse(value!);
-                      },
-                    ),
-                  ),
-                  TextInputField(
-                    initialValue: tax?.toStringAsFixed(2),
-                    isCenter: true,
-                    isOnlyNumber: true,
-                    isRequire: true,
-                    width: 150,
-                    onChanged: (value) => setState(
-                      () {
-                        tax = double.parse(value!);
-                      },
-                    ),
-                  ),
-                  TextUneditable(
-                    value: (netPremium != null && duty != null && tax != null)
-                        ? (netPremium! + duty! + tax!).toStringAsFixed(2)
-                        : '',
-                    width: 150,
-                  )
-                ],
-              )
             ],
           ),
           spacingVertical,
@@ -404,8 +360,8 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                           key: buildingFurnitureFundKey,
                           initialValue:
                               buildingFurnitureFund?.toStringAsFixed(2),
-                          isCenter: true,
-                          isOnlyNumber: true,
+                          center: true,
+                          onlyNumber: true,
                           width: 300,
                           onChanged: (value) => setState(
                             () {
@@ -415,8 +371,8 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                         ),
                         TextInputField(
                           initialValue: stockFund?.toStringAsFixed(2),
-                          isCenter: true,
-                          isOnlyNumber: true,
+                          center: true,
+                          onlyNumber: true,
                           width: 150,
                           onChanged: (value) => setState(
                             () {
@@ -436,8 +392,8 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                         TextInputField(
                           key: buildingFundKey,
                           initialValue: buildingFund?.toStringAsFixed(2),
-                          isCenter: true,
-                          isOnlyNumber: true,
+                          center: true,
+                          onlyNumber: true,
                           width: 150,
                           onChanged: (value) => setState(
                             () {
@@ -449,8 +405,8 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                         TextInputField(
                           key: furnitureFundKey,
                           initialValue: furnitureFund?.toStringAsFixed(2),
-                          isCenter: true,
-                          isOnlyNumber: true,
+                          center: true,
+                          onlyNumber: true,
                           width: 150,
                           onChanged: (value) => setState(
                             () {
@@ -461,8 +417,8 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                         ),
                         TextInputField(
                           initialValue: stockFund?.toStringAsFixed(2),
-                          isCenter: true,
-                          isOnlyNumber: true,
+                          center: true,
+                          onlyNumber: true,
                           width: 150,
                           onChanged: (value) => setState(
                             () {
@@ -485,8 +441,8 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                 fields: [
                   TextInputField(
                     initialValue: machineFund?.toStringAsFixed(2),
-                    isCenter: true,
-                    isOnlyNumber: true,
+                    center: true,
+                    onlyNumber: true,
                     width: 150,
                     onChanged: (value) => setState(
                       () {
@@ -497,8 +453,8 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                   ),
                   TextInputField(
                     initialValue: otherFund?.toStringAsFixed(2),
-                    isCenter: true,
-                    isOnlyNumber: true,
+                    center: true,
+                    onlyNumber: true,
                     width: 150,
                     onChanged: (value) => setState(
                       () {
@@ -523,12 +479,99 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
           spacingVertical,
           Row(
             children: [
+              const TopicText('เบี้ยประกันภัย'),
+              spacing,
+              TableInputFields(
+                headers: const ['เบี้ยประกันสุทธิ', 'อากร', 'ภาษี', 'เบี้ยรวม'],
+                fields: [
+                  TextInputField(
+                    initialValue: netPremium?.toStringAsFixed(2),
+                    center: true,
+                    onlyNumber: true,
+                    require: true,
+                    width: 150,
+                    onChanged: (value) => setState(
+                      () {
+                        netPremium =
+                            value!.isEmpty ? null : double.parse(value);
+                      },
+                    ),
+                  ),
+                  TextInputField(
+                    initialValue: duty?.toStringAsFixed(2),
+                    center: true,
+                    onlyNumber: true,
+                    require: true,
+                    width: 150,
+                    onChanged: (value) => setState(
+                      () {
+                        duty = value!.isEmpty ? null : double.parse(value);
+                      },
+                    ),
+                  ),
+                  TextInputField(
+                    initialValue: tax?.toStringAsFixed(2),
+                    center: true,
+                    onlyNumber: true,
+                    require: true,
+                    width: 150,
+                    onChanged: (value) => setState(
+                      () {
+                        tax = value!.isEmpty ? null : double.parse(value);
+                      },
+                    ),
+                  ),
+                  TextUneditable(
+                    value: (netPremium != null && duty != null && tax != null)
+                        ? (netPremium! + duty! + tax!).toStringAsFixed(2)
+                        : '',
+                    width: 150,
+                  )
+                ],
+              )
+            ],
+          ),
+          spacingVertical,
+          Row(
+            children: [
+              topicSpacing,
+              spacing,
+              TableInputFields(
+                headers: const ['ส่วนลด (%)', 'เบี้ยเก็บจริง'],
+                fields: [
+                  TextInputField(
+                    width: 150,
+                    initialValue: premiumDiscountPercent?.toStringAsFixed(2),
+                    onlyNumber: true,
+                    center: true,
+                    onChanged: (value) => setState(() {
+                      premiumDiscountPercent =
+                          value!.isEmpty ? null : double.parse(value);
+                    }),
+                  ),
+                  TextUneditable(
+                    width: 150,
+                    isCenter: true,
+                    value: (netPremium != null && duty != null && tax != null)
+                        ? ((netPremium! + duty! + tax!) *
+                                (100 - (premiumDiscountPercent ?? 0)) /
+                                100)
+                            .toStringAsFixed(2)
+                        : '',
+                  )
+                ],
+              ),
+            ],
+          ),
+          spacingVertical,
+          Row(
+            children: [
               const TopicText('แนบไฟล์'),
               if (isEditing && widget.editFrom!.data.filesName.isNotEmpty) ...[
                 spacing,
                 AllFilesExpandPanel(
                   items: widget.editFrom!.data.filesName,
-                  prefixLength: widget.editFrom!.data.policyNumber.length,
+                  prefixLength: widget.editFrom!.data.policyNumber.length + 1,
                 ),
               ],
               spacing,
@@ -540,6 +583,59 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
               ),
             ],
           ),
+          if (isEditing) ...[
+            spacingVertical,
+            Row(
+              children: [
+                const TopicText('สถานะการชำระ'),
+                spacing,
+                isPaid
+                    ? TextUneditable(
+                        value:
+                            'ชำระเมื่อวันที่: ${DateFormat('dd/MM/').format(paymentDate!) + (paymentDate!.year + 543).toString()}',
+                        width: 250,
+                      )
+                    : const TextUneditable(
+                        value: 'ยังไม่ชำระ',
+                        width: 150,
+                        isCenter: true,
+                      ),
+                if (!isPaid) ...[
+                  spacing,
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).errorColor),
+                    onPressed: () async {
+                      try {
+                        await UiUtil.confirmDialog(
+                          context,
+                          title: 'ยืนยันการชำระ?',
+                          description: 'เมื่อกดยืนยัน จะไม่สามารถยกเลิกได้',
+                          onConfirm: () {
+                            return UiUtil.loadingScreen(
+                              context,
+                              timeoutSecond: 3,
+                              future: () async {
+                                isPaid = true;
+                                paymentDate = DateTime.now();
+                                await upload();
+                                setState(() {});
+                              }(),
+                            );
+                          },
+                        );
+                      } catch (e) {
+                        UiUtil.snackbar(context, e.toString());
+                        isPaid = false;
+                        paymentDate = null;
+                      }
+                    },
+                    child: const Text('ยืนยันการชำระ'),
+                  )
+                ]
+              ],
+            ),
+          ],
           spacingVertical,
           Center(
             child: ElevatedButton(

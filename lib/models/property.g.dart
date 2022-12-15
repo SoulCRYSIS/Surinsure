@@ -26,8 +26,8 @@ FireProperty _$FirePropertyFromJson(Map<String, dynamic> json) => FireProperty(
       roofBeam: json['roofBeam'] as String,
       roof: json['roof'] as String,
       buildingCount: json['buildingCount'] as String,
-      width: (json['width'] as num).toDouble(),
-      length: (json['length'] as num).toDouble(),
+      width: (json['width'] as num?)?.toDouble(),
+      length: (json['length'] as num?)?.toDouble(),
       area: (json['area'] as num).toDouble(),
       occupancy: json['occupancy'] as String,
     );

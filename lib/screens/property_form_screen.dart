@@ -27,20 +27,38 @@ class PropertyFormScreen extends StatefulWidget {
 class _PropertyFormScreenState extends State<PropertyFormScreen> {
   late PropertyType type = widget.editFrom?.data.type ?? PropertyType.fire;
 
+  bool get isEditing => widget.editFrom != null;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ลงทะเบียนทรัพย์สิน')),
+      appBar: AppBar(
+        title: Text(isEditing ? 'แก้ไขข้อมูลทรัพย์สิน' : 'ลงทะเบียนทรัพย์สิน'),
+        actions: const [HomeButton()],
+      ),
       body: Center(
         child: BidirectionScroll(
           child: BlockBorder(
               child: Column(
             children: [
+              if (isEditing) ...[
+                Row(
+                  children: [
+                    const TopicText('รหัสทรัพย์สิน'),
+                    spacing,
+                    TextCopyable(
+                      width: 300,
+                      value: widget.editFrom!.id,
+                    ),
+                  ],
+                ),
+                spacingVertical,
+              ],
               Row(
                 children: [
                   const TopicText('ประเภท'),
                   spacing,
-                  widget.editFrom == null
+                  !isEditing
                       ? SizedBox(
                           width: 150,
                           child: DropdownButtonFormField(
@@ -113,6 +131,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
   String buildingCount = '';
   double? width;
   double? length;
+  double? area;
   String occupancy = '';
 
   final formKey = GlobalKey<FormState>();
@@ -156,9 +175,9 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
       roofBeam: roofBeam,
       roof: roof,
       buildingCount: buildingCount,
-      area: width! * length!,
-      width: width!,
-      length: length!,
+      area: area!,
+      width: width,
+      length: length,
       occupancy: occupancy,
     );
     try {
@@ -214,6 +233,8 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
       buildingCount = e.buildingCount;
       width = e.width;
       length = e.length;
+      area = e.area;
+      occupancy = e.occupancy;
     }
     super.initState();
   }
@@ -357,8 +378,8 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                 initialValue: zipcode,
                 onChanged: (value) => zipcode = value!,
                 label: 'ไปรษณีย์',
-                isOnlyNumber: true,
-                isRequire: true,
+                onlyNumber: true,
+                require: true,
                 key: UniqueKey(),
               ),
               spacing,
@@ -398,37 +419,37 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   TextInputField(
                     width: 120,
                     initialValue: floorCount?.toString(),
-                    isCenter: true,
-                    isOnlyDigit: true,
-                    isRequire: true,
+                    center: true,
+                    onlyDigit: true,
+                    require: true,
                     onChanged: (value) => floorCount = int.parse(value!),
                   ),
                   TextInputField(
                     width: 130,
                     initialValue: externalWall,
-                    isCenter: true,
-                    isRequire: true,
+                    center: true,
+                    require: true,
                     onChanged: (value) => externalWall = value!,
                   ),
                   TextInputField(
                     width: 130,
                     initialValue: upperFloor,
-                    isCenter: true,
-                    isRequire: true,
+                    center: true,
+                    require: true,
                     onChanged: (value) => upperFloor = value!,
                   ),
                   TextInputField(
                     width: 130,
                     initialValue: roofBeam,
-                    isCenter: true,
-                    isRequire: true,
+                    center: true,
+                    require: true,
                     onChanged: (value) => roofBeam = value!,
                   ),
                   TextInputField(
                     width: 130,
                     initialValue: roof,
-                    isCenter: true,
-                    isRequire: true,
+                    center: true,
+                    require: true,
                     onChanged: (value) => roof = value!,
                   ),
                 ],
@@ -449,15 +470,15 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   TextInputField(
                     width: 150,
                     initialValue: buildingCount,
-                    isCenter: true,
-                    isRequire: true,
+                    center: true,
+                    require: true,
                     onChanged: (value) => buildingCount = value!,
                   ),
                   TextInputField(
                     width: 200,
                     initialValue: occupancy,
-                    isCenter: true,
-                    isRequire: true,
+                    center: true,
+                    require: true,
                     onChanged: (value) => occupancy = value!,
                   ),
                 ],
@@ -479,29 +500,30 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   TextInputField(
                     width: 150,
                     initialValue: width?.toString(),
-                    isCenter: true,
-                    isOnlyDigit: true,
-                    isRequire: true,
+                    center: true,
+                    onlyNumber: true,
                     onChanged: (value) => setState(() {
-                      width = double.parse(value!);
+                      width = value!.isEmpty ? null : double.parse(value);
                     }),
                   ),
                   TextInputField(
                     width: 150,
                     initialValue: length?.toString(),
-                    isCenter: true,
-                    isOnlyDigit: true,
-                    isRequire: true,
+                    center: true,
+                    onlyNumber: true,
                     onChanged: (value) => setState(() {
-                      length = double.parse(value!);
+                      length = value!.isEmpty ? null : double.parse(value);
                     }),
                   ),
-                  TextUneditable(
+                  TextInputField(
                     width: 150,
-                    isCenter: true,
-                    value: width != null && length != null
-                        ? (width! * length!).toString()
-                        : '',
+                    initialValue: area?.toString(),
+                    center: true,
+                    onlyNumber: true,
+                    require: true,
+                    onChanged: (value) => setState(() {
+                      area = value!.isEmpty ? null : double.parse(value);
+                    }),
                   ),
                 ],
               ),
@@ -516,7 +538,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SearchPoliciesScreen(),
+                        builder: (context) => const SearchPoliciesScreen(),
                       )),
                   child: const SizedBox(
                     width: 120,

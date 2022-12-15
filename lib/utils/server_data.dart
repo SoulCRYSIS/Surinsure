@@ -1,11 +1,16 @@
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:woot/constants/firestore_collection.dart';
 import 'dart:html' as html;
 import 'connection_util.dart';
 
 class ServerData {
   ServerData._();
+
+  static late List<String> _insuranceCompanies;
+
+  static get insuranceCompanies => _insuranceCompanies;
 
   static Future<void> uploadFile(PlatformFile file, String name) async {
     await ConnectionUtil.setTimeout(
@@ -18,5 +23,19 @@ class ServerData {
     html.AnchorElement anchorElement = html.AnchorElement(href: url);
     anchorElement.download = url;
     anchorElement.click();
+  }
+
+  static Future<void> fetchData() async {
+    Map<String, dynamic> json =
+        (await FirestoreCollection.data.doc('main').get()).data()!;
+    _insuranceCompanies = (json['insuranceCompanies'] as List<dynamic>)
+        .map((e) => e as String)
+        .toList();
+  }
+
+  static Future<void> updateData() async {
+    await FirestoreCollection.data.doc('main').set({
+      'insuranceCompanies': _insuranceCompanies,
+    });
   }
 }

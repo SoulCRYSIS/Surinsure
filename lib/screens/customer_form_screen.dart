@@ -7,6 +7,7 @@ import 'package:woot/screens/property_form_screen.dart';
 import 'package:woot/screens/search_policies_screen.dart';
 import 'package:woot/screens/search_properties_screen.dart';
 import 'package:woot/utils/ui_util.dart';
+import 'package:woot/utils/validator.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
 import '../constants/constant.dart';
@@ -130,9 +131,11 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: !isEditing
-              ? const Text('ลงทะเบียนลูกค้าใหม่')
-              : const Text('แก้ไขข้อมูลลูกค้า')),
+        title: !isEditing
+            ? const Text('ลงทะเบียนลูกค้าใหม่')
+            : const Text('แก้ไขข้อมูลลูกค้า'),
+        actions: const [HomeButton()],
+      ),
       body: Center(
         child: BidirectionScroll(
           child: BlockBorder(
@@ -177,7 +180,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           width: 320,
                           initialValue: juristicName,
                           onChanged: (value) => juristicName = value!,
-                          isRequire: true,
+                          require: true,
                         ),
                       ],
                     ],
@@ -197,8 +200,8 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           }
                           return null;
                         },
-                        isRequire: true,
-                        isOnlyDigit: true,
+                        require: true,
+                        onlyDigit: true,
                       ),
                     ],
                   ),
@@ -228,7 +231,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         width: 250,
                         initialValue: firstname,
                         onChanged: (value) => firstname = value!,
-                        isRequire: true,
+                        require: true,
                       ),
                       spacing,
                       TextInputField(
@@ -236,7 +239,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         width: 250,
                         initialValue: surname,
                         onChanged: (value) => surname = value!,
-                        isRequire: true,
+                        require: true,
                       ),
                     ],
                   ),
@@ -375,8 +378,8 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           }
                           return null;
                         },
-                        isRequire: true,
-                        isOnlyDigit: true,
+                        require: true,
+                        onlyDigit: true,
                       ),
                       spacing,
                       TextInputField(
@@ -402,7 +405,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                             return null;
                           }
                           // Thai format
-                          if (RegExp(r'^[0-9]+$').hasMatch(value)) {
+                          if (Validator.isDigits(value)) {
                             if (value.length != 10 && value.length != 9) {
                               return 'ความยาวไม่ถูกต้อง';
                             }
@@ -411,10 +414,9 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                               return 'รูปแบบไม่ถูกต้อง';
                             }
                           }
-                          // US format
-                          else if (value.substring(0, 2) == '+1' &&
-                              RegExp(r'^[0-9]+$')
-                                  .hasMatch(value.substring(2))) {
+                          // Foriegn format
+                          else if (value[0] == '+' &&
+                              Validator.isDigits(value.substring(1))) {
                             if (value.length != 12) {
                               return 'ความยาวไม่ถูกต้อง';
                             }
@@ -438,6 +440,22 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (isEditing) ...[
+                        ElevatedButton(
+                          onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SearchPoliciesScreen(
+                                    customerId: widget.editFrom!.id),
+                              )),
+                          child: const SizedBox(
+                            width: 120,
+                            child: Text(
+                              'ดูกรมธรรม์ทั้งหมด',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        spacing,
                         ElevatedButton(
                           onPressed: () => Navigator.push(
                               context,

@@ -54,8 +54,8 @@ class FireProperty extends Property {
   final String roofBeam;
   final String roof;
   final String buildingCount;
-  final double width;
-  final double length;
+  final double? width;
+  final double? length;
   final double area;
   final String occupancy;
 

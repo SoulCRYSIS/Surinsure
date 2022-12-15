@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:woot/models/property.dart';
 part 'policy.g.dart';
@@ -17,6 +18,9 @@ abstract class Policy {
   final double duty;
   final double tax;
   final String company;
+  final double premiumDiscountPercent;
+  final bool isPaid;
+  final DateTime? paymentDate;
 
   Policy({
     required this.customerId,
@@ -32,6 +36,9 @@ abstract class Policy {
     required this.duty,
     required this.tax,
     required this.company,
+    required this.premiumDiscountPercent,
+    required this.isPaid,
+    required this.paymentDate,
   });
 
   factory Policy.fromJson(Map<String, dynamic> json) {
@@ -47,13 +54,18 @@ abstract class Policy {
       filesName.map((e) => e.substring(policyNumber.length)).toList();
 
   late final List<String> asTextRow = [
-    customerId,
     policyNumber,
+    company,
+    isPaid ? 'ชำระแล้ว' : 'ยังไม่ชำระ',
+    DateFormat('dd/MM/').format(policyIssueDate) +
+        (policyIssueDate.year + 543).toString()
   ];
 
   static const List<String> headers = [
-    'รหัสลูกค้า',
     'เลขที่กรมธรรม์',
+    'บริษัทรับประกัน',
+    'สถานะการชำระ',
+    'วันที่ทำกรมธรรม์',
   ];
 }
 
@@ -80,6 +92,9 @@ class FirePolicy extends Policy {
     required super.duty,
     required super.tax,
     required super.company,
+    required super.premiumDiscountPercent,
+    required super.isPaid,
+    required super.paymentDate,
     required this.buildingFund,
     required this.furnitureFund,
     required this.buildingFurnitureFund,
