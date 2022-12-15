@@ -46,7 +46,7 @@ class HomeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.home),
-      onPressed: () => Navigator.of(context).popUntil(ModalRoute.withName('/')),
+      onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
     );
   }
 }

@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await UiUtil.loadingScreen(
         context,
-        timeoutSecond: 1,
+        timeoutSecond: 3,
         future: FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: password,

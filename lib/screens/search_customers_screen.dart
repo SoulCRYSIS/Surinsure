@@ -128,7 +128,6 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                     'ตัวกรอง',
                     style: Theme.of(context).textTheme.headline1,
                   ),
-                  spacingVertical,
                   DropdownInputField(
                     width: 200,
                     items: Constant.assuredTypes,

@@ -32,7 +32,7 @@ abstract class Property {
     }
   }
   Map<String, dynamic> toJson();
-  
+
   abstract final List<String> asTextRow;
 }
 
@@ -92,15 +92,19 @@ class FireProperty extends Property {
 
   @override
   late final List<String> asTextRow = [
+    '$houseNumber $buildingOrVillage${villageNumber.isEmpty ? '' : ' หมู่$villageNumber'}${alley.isEmpty ? '' : ' ตรอก$alley'}${lane.isEmpty ? '' : ' ซอย$lane'}${road.isEmpty ? '' : ' ถนน$road'}',
     province,
     district,
     subdistrict,
+    zipcode,
   ];
 
   static const List<String> headers = [
+    'รายละเอียดที่อยู่',
     'จังหวัด',
     'อำเภอ',
     'ตำบล',
+    'ไปรษณีย์',
   ];
 }
 

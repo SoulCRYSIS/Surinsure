@@ -235,11 +235,11 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
               spacing,
               isEditing
                   ? TextCopyable(
-                      width: 300,
+                      width: 400,
                       value: policyNumber,
                     )
                   : TextInputField(
-                      width: 300,
+                      width: 400,
                       onChanged: (value) => policyNumber = value!,
                       require: true,
                       validator: (value) {

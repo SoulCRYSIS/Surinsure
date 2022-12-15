@@ -538,7 +538,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const SearchPoliciesScreen(),
+                        builder: (context) => SearchPoliciesScreen(propertyId: widget.editFrom!.id),
                       )),
                   child: const SizedBox(
                     width: 120,

@@ -110,7 +110,6 @@ class _SearchPoliciesScreenState extends State<SearchPoliciesScreen> {
                     'ตัวกรอง',
                     style: Theme.of(context).textTheme.headline1,
                   ),
-                  spacingVertical,
                   TextInputField(
                     initialValue: widget.customerId,
                     width: 200,
@@ -126,7 +125,6 @@ class _SearchPoliciesScreenState extends State<SearchPoliciesScreen> {
                   ),
                   spacingVertical,
                   TextInputField(
-                    initialValue: widget.propertyId,
                     width: 200,
                     label: 'เลขที่กรมธรรม์',
                     onChanged: (value) => propertyId = value!,
