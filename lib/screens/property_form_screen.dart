@@ -89,11 +89,296 @@ class _PropertyFormScreenState extends State<PropertyFormScreen> {
                       customerData: widget.customerData,
                       editFrom: widget.editFrom,
                     );
+                  case PropertyType.car:
+                    return CarPropertyForm(
+                      customerId: widget.customerId,
+                      customerData: widget.customerData,
+                      editFrom: widget.editFrom,
+                    );
                 }
               }(),
             ],
           )),
         ),
+      ),
+    );
+  }
+}
+
+class CarPropertyForm extends StatefulWidget {
+  const CarPropertyForm(
+      {this.editFrom, required this.customerId, this.customerData, super.key});
+
+  final PropertyDocument? editFrom;
+  final String customerId;
+  final Customer? customerData;
+
+  @override
+  State<CarPropertyForm> createState() => _CarPropertyFormState();
+}
+
+class _CarPropertyFormState extends State<CarPropertyForm> {
+  String registration = '';
+  String registrationProvince = '';
+  String code = '';
+  String brand = '';
+  String model = '';
+  String bodyId = '';
+  String engineId = '';
+  String color = '';
+  int? cc;
+  double? weight;
+  int? seat;
+
+  final formKey = GlobalKey<FormState>();
+
+  bool get isEditing => widget.editFrom != null;
+
+  Future<void> upload() async {
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    final property = CarProperty(
+      customerId: widget.customerId,
+      registration: registration,
+      registrationProvince: registrationProvince,
+      code: code,
+      brand: brand,
+      model: model,
+      bodyId: bodyId,
+      engineId: engineId,
+      color: color,
+      cc: cc!,
+      weight: weight!,
+      seat: seat!,
+    );
+    try {
+      late final DocumentReference<Map<String, dynamic>> newDocRef;
+      await UiUtil.loadingScreen(context,
+          timeoutSecond: 3,
+          future: !isEditing
+              ? () async {
+                  newDocRef = await FirestoreCollection.properties
+                      .add(property.toJson());
+                }()
+              : widget.editFrom!.reference.update(property.toJson()));
+      if (!isEditing) {
+        // ignore: use_build_context_synchronously
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PropertyFormScreen(
+                  customerId: widget.customerId,
+                  customerData: widget.customerData,
+                  editFrom: PropertyDocument(
+                      id: newDocRef.id, reference: newDocRef, data: property)),
+            ));
+      } else {
+        // ignore: use_build_context_synchronously
+        UiUtil.snackbar(context, 'บันทึกข้อมูลสำเร็จ', isError: false);
+      }
+    } catch (e) {
+      UiUtil.snackbar(context, e.toString());
+    }
+  }
+
+  @override
+  void initState() {
+    if (isEditing) {
+      final CarProperty e = widget.editFrom!.data as CarProperty;
+      registration = e.registration;
+      registrationProvince = e.registrationProvince;
+      code = e.code;
+      brand = e.brand;
+      model = e.model;
+      bodyId = e.bodyId;
+      engineId = e.engineId;
+      color = e.color;
+      cc = e.cc;
+      weight = e.weight;
+      seat = e.seat;
+    }
+
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const TopicText('ทะเบียนรถ'),
+              spacing,
+              TextInputField(
+                width: 100,
+                initialValue: registration,
+                require: true,
+                onChanged: (value) => registration = value!,
+              ),
+              spacing,
+              DropdownSearchableInputField(
+                items: GeoData.changwats,
+                width: 150,
+                require: true,
+                label: 'จังหวัด',
+                onEditingComplete: (value) => registrationProvince = value!,
+              ),
+            ],
+          ),
+          spacingVertical,
+          Row(
+            children: [
+              const TopicText('ข้อมูลรถ'),
+              spacing,
+              TextInputField(
+                width: 100,
+                initialValue: code,
+                require: true,
+                label: 'รหัสรถ',
+                onChanged: (value) => code = value!,
+              ),
+              spacing,
+              TextInputField(
+                width: 150,
+                initialValue: brand,
+                require: true,
+                label: 'ยี่ห้อ',
+                onChanged: (value) => brand = value!,
+              ),
+              spacing,
+              TextInputField(
+                width: 150,
+                initialValue: model,
+                require: true,
+                label: 'รุ่น',
+                onChanged: (value) => model = value!,
+              ),
+            ],
+          ),
+          spacingVertical,
+          Row(
+            children: [
+              topicSpacing,
+              spacing,
+              TextInputField(
+                width: 150,
+                initialValue: color,
+                require: true,
+                label: 'สี',
+                onChanged: (value) => color = value!,
+              ),
+              spacing,
+              TextInputField(
+                width: 100,
+                initialValue: cc?.toString(),
+                onlyDigit: true,
+                require: true,
+                label: 'ซีซี',
+                onChanged: (value) =>
+                    cc = value!.isEmpty ? null : int.parse(value),
+              ),
+              spacing,
+              TextInputField(
+                width: 150,
+                initialValue: weight?.toStringAsFixed(2),
+                onlyNumber: true,
+                require: true,
+                label: 'น้ำหนัก (ตัน)',
+                onChanged: (value) =>
+                    weight = value!.isEmpty ? null : double.parse(value),
+              ),
+              spacing,
+              TextInputField(
+                width: 100,
+                initialValue: seat?.toString(),
+                onlyDigit: true,
+                require: true,
+                label: 'ที่นั่ง',
+                onChanged: (value) =>
+                    seat = value!.isEmpty ? null : int.parse(value),
+              ),
+            ],
+          ),
+          spacingVertical,
+          Row(
+            children: [
+              topicSpacing,
+              spacing,
+              TextInputField(
+                width: 250,
+                initialValue: bodyId,
+                require: true,
+                label: 'เลขตัวถัง',
+                onChanged: (value) => bodyId = value!,
+              ),
+              spacing,
+              TextInputField(
+                width: 250,
+                initialValue: engineId,
+                require: true,
+                label: 'เลขเครื่องยนตร์',
+                onChanged: (value) => engineId = value!,
+              ),
+            ],
+          ),
+          spacingVertical,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isEditing) ...[
+                ElevatedButton(
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SearchPoliciesScreen(
+                            propertyId: widget.editFrom!.id),
+                      )),
+                  child: const SizedBox(
+                    width: 120,
+                    child: Text(
+                      'ดูกรมธรรม์ทั้งหมด',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                spacing,
+                ElevatedButton(
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PolicyFormScreen(
+                          propertyId: widget.editFrom!.id,
+                          customerId: widget.customerId,
+                          type: PropertyType.fire,
+                        ),
+                      )),
+                  child: const SizedBox(
+                    width: 120,
+                    child: Text(
+                      'เพิ่มกรมธรรม์',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                spacing,
+              ],
+              ElevatedButton(
+                onPressed: upload,
+                child: SizedBox(
+                  width: 120,
+                  child: Text(
+                    isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -315,7 +600,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   }
                   return null;
                 },
-                isRequire: true,
+                require: true,
               ),
               spacing,
               DropdownSearchableInputField(
@@ -340,7 +625,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   }
                   return null;
                 },
-                isRequire: true,
+                require: true,
               ),
               spacing,
               DropdownSearchableInputField(
@@ -361,7 +646,7 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   }
                   return null;
                 },
-                isRequire: true,
+                require: true,
               ),
             ],
           ),
@@ -535,7 +820,8 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SearchPoliciesScreen(propertyId: widget.editFrom!.id),
+                        builder: (context) => SearchPoliciesScreen(
+                            propertyId: widget.editFrom!.id),
                       )),
                   child: const SizedBox(
                     width: 120,

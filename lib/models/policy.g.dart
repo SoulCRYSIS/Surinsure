@@ -64,4 +64,48 @@ Map<String, dynamic> _$FirePolicyToJson(FirePolicy instance) =>
 
 const _$PropertyTypeEnumMap = {
   PropertyType.fire: 'fire',
+  PropertyType.car: 'car',
 };
+
+CarPolicy _$CarPolicyFromJson(Map<String, dynamic> json) => CarPolicy(
+      customerId: json['customerId'] as String,
+      propertyId: json['propertyId'] as String,
+      type: $enumDecodeNullable(_$PropertyTypeEnumMap, json['type']) ??
+          PropertyType.fire,
+      policyNumber: json['policyNumber'] as String,
+      startDate: DateTime.parse(json['startDate'] as String),
+      endDate: DateTime.parse(json['endDate'] as String),
+      policyIssueDate: DateTime.parse(json['policyIssueDate'] as String),
+      contractIssueDate: DateTime.parse(json['contractIssueDate'] as String),
+      filesName:
+          (json['filesName'] as List<dynamic>).map((e) => e as String).toList(),
+      netPremium: (json['netPremium'] as num).toDouble(),
+      duty: (json['duty'] as num).toDouble(),
+      tax: (json['tax'] as num).toDouble(),
+      company: json['company'] as String,
+      premiumDiscountPercent:
+          (json['premiumDiscountPercent'] as num).toDouble(),
+      isPaid: json['isPaid'] as bool,
+      paymentDate: json['paymentDate'] == null
+          ? null
+          : DateTime.parse(json['paymentDate'] as String),
+    );
+
+Map<String, dynamic> _$CarPolicyToJson(CarPolicy instance) => <String, dynamic>{
+      'customerId': instance.customerId,
+      'propertyId': instance.propertyId,
+      'type': _$PropertyTypeEnumMap[instance.type]!,
+      'policyNumber': instance.policyNumber,
+      'startDate': instance.startDate.toIso8601String(),
+      'endDate': instance.endDate.toIso8601String(),
+      'contractIssueDate': instance.contractIssueDate.toIso8601String(),
+      'policyIssueDate': instance.policyIssueDate.toIso8601String(),
+      'filesName': instance.filesName,
+      'netPremium': instance.netPremium,
+      'duty': instance.duty,
+      'tax': instance.tax,
+      'company': instance.company,
+      'premiumDiscountPercent': instance.premiumDiscountPercent,
+      'isPaid': instance.isPaid,
+      'paymentDate': instance.paymentDate?.toIso8601String(),
+    };

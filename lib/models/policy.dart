@@ -45,6 +45,8 @@ abstract class Policy {
     switch (PropertyType.fromString(json['type'])) {
       case PropertyType.fire:
         return FirePolicy.fromJson(json);
+      case PropertyType.car:
+        return CarPolicy.fromJson(json);
     }
   }
   Map<String, dynamic> toJson();
@@ -109,6 +111,34 @@ class FirePolicy extends Policy {
       _$FirePolicyFromJson(json);
   @override
   Map<String, dynamic> toJson() => _$FirePolicyToJson(this);
+}
+
+@JsonSerializable()
+class CarPolicy extends Policy {
+  CarPolicy({
+    required super.customerId,
+    required super.propertyId,
+    super.type = PropertyType.fire,
+    required super.policyNumber,
+    required super.startDate,
+    required super.endDate,
+    required super.policyIssueDate,
+    required super.contractIssueDate,
+    required super.filesName,
+    required super.netPremium,
+    required super.duty,
+    required super.tax,
+    required super.company,
+    required super.premiumDiscountPercent,
+    required super.isPaid,
+    required super.paymentDate,
+  });
+
+  //Constructor and Function from package 'json_serializable'
+  factory CarPolicy.fromJson(Map<String, dynamic> json) =>
+      _$CarPolicyFromJson(json);
+  @override
+  Map<String, dynamic> toJson() => _$CarPolicyToJson(this);
 }
 
 class PolicyDocument {

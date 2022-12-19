@@ -240,6 +240,8 @@ class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
                             ),
                             spacingVertical,
                           ];
+                        case PropertyType.car:
+                          return [];
                       }
                     }(),
                   Row(

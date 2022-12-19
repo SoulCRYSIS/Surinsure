@@ -5,11 +5,13 @@ part 'property.g.dart';
 
 @JsonEnum()
 enum PropertyType {
-  fire('อัคคีภัย');
+  fire('อัคคีภัย'),
+  car('รถยนตร์');
 
   final String thai;
   static const _$PropertyTypeEnumMap = {
     PropertyType.fire: 'fire',
+    PropertyType.car: 'car',
   };
   const PropertyType(this.thai);
   factory PropertyType.fromString(String string) =>
@@ -29,6 +31,8 @@ abstract class Property {
     switch (PropertyType.fromString(json['type'])) {
       case PropertyType.fire:
         return FireProperty.fromJson(json);
+      case PropertyType.car:
+        return CarProperty.fromJson(json);
     }
   }
   Map<String, dynamic> toJson();
@@ -105,6 +109,60 @@ class FireProperty extends Property {
     'อำเภอ',
     'ตำบล',
     'ไปรษณีย์',
+  ];
+}
+
+@JsonSerializable()
+class CarProperty extends Property {
+  final String registration;
+  final String registrationProvince;
+  final String code;
+  final String brand;
+  final String model;
+  final String bodyId;
+  final String engineId;
+  final String color;
+  final int cc;
+  final double weight;
+  final int seat;
+
+  CarProperty({
+    required super.customerId,
+    super.type = PropertyType.car,
+    required this.registration,
+    required this.registrationProvince,
+    required this.code,
+    required this.brand,
+    required this.model,
+    required this.bodyId,
+    required this.engineId,
+    required this.color,
+    required this.cc,
+    required this.weight,
+    required this.seat,
+  });
+
+  //Constructor and Function from package 'json_serializable'
+  factory CarProperty.fromJson(Map<String, dynamic> json) =>
+      _$CarPropertyFromJson(json);
+  @override
+  Map<String, dynamic> toJson() => _$CarPropertyToJson(this);
+
+  @override
+  late final List<String> asTextRow = [
+    registration,
+    registrationProvince,
+    brand,
+    model,
+    color,
+  ];
+
+  static const List<String> headers = [
+    'ทะเบียนรถ',
+    'จังหวัด',
+    'ยี่ห้อรถ',
+    'รุ่น',
+    'สีรถ',
   ];
 }
 

@@ -242,7 +242,7 @@ class DropdownSearchableInputField extends StatelessWidget {
     this.value,
     this.label,
     this.validator,
-    this.isRequire = false,
+    this.require = false,
     required this.width,
     required this.items,
     this.onEditingComplete,
@@ -256,7 +256,7 @@ class DropdownSearchableInputField extends StatelessWidget {
   final String? label;
   final String? value;
   final double width;
-  final bool isRequire;
+  final bool require;
   final void Function(String? value)? onEditingComplete;
   final void Function(String? value)? onChanged;
   final String? Function(String? value)? validator;
@@ -291,7 +291,7 @@ class DropdownSearchableInputField extends StatelessWidget {
               label: Text.rich(
                 TextSpan(
                   children: [
-                    if (isRequire)
+                    if (require)
                       TextSpan(
                           text: '*',
                           style:
@@ -321,7 +321,7 @@ class DropdownSearchableInputField extends StatelessWidget {
                     ),
                   ),
           autoFlipDirection: true,
-          validator: isRequire ? Validator.notEmpty(validator) : validator,
+          validator: require ? Validator.notEmpty(validator) : validator,
         ),
       ),
     );

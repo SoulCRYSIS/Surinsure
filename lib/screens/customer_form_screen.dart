@@ -312,7 +312,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           }
                           return null;
                         },
-                        isRequire: true,
+                        require: true,
                       ),
                       spacing,
                       DropdownSearchableInputField(
@@ -337,7 +337,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           }
                           return null;
                         },
-                        isRequire: true,
+                        require: true,
                       ),
                       spacing,
                       DropdownSearchableInputField(
@@ -358,7 +358,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           }
                           return null;
                         },
-                        isRequire: true,
+                        require: true,
                       ),
                     ],
                   ),
@@ -459,7 +459,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                                         value: e.value,
                                         items: ServerData.customerGroups,
                                         width: 200,
-                                        isRequire: true,
+                                        require: true,
                                         onChanged: (value) =>
                                             groups[e.key] = value!,
                                         noItemsFoundBuilder: (_) => ListTile(

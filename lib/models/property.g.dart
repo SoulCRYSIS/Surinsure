@@ -60,4 +60,39 @@ Map<String, dynamic> _$FirePropertyToJson(FireProperty instance) =>
 
 const _$PropertyTypeEnumMap = {
   PropertyType.fire: 'fire',
+  PropertyType.car: 'car',
 };
+
+CarProperty _$CarPropertyFromJson(Map<String, dynamic> json) => CarProperty(
+      customerId: json['customerId'] as String,
+      type: $enumDecodeNullable(_$PropertyTypeEnumMap, json['type']) ??
+          PropertyType.car,
+      registration: json['registration'] as String,
+      registrationProvince: json['registrationProvince'] as String,
+      code: json['code'] as String,
+      brand: json['brand'] as String,
+      model: json['model'] as String,
+      bodyId: json['bodyId'] as String,
+      engineId: json['engineId'] as String,
+      color: json['color'] as String,
+      cc: json['cc'] as int,
+      weight: (json['weight'] as num).toDouble(),
+      seat: json['seat'] as int,
+    );
+
+Map<String, dynamic> _$CarPropertyToJson(CarProperty instance) =>
+    <String, dynamic>{
+      'type': _$PropertyTypeEnumMap[instance.type]!,
+      'customerId': instance.customerId,
+      'registration': instance.registration,
+      'registrationProvince': instance.registrationProvince,
+      'code': instance.code,
+      'brand': instance.brand,
+      'model': instance.model,
+      'bodyId': instance.bodyId,
+      'engineId': instance.engineId,
+      'color': instance.color,
+      'cc': instance.cc,
+      'weight': instance.weight,
+      'seat': instance.seat,
+    };
