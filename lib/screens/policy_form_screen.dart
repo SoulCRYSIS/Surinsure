@@ -9,6 +9,7 @@ import 'package:woot/utils/server_data.dart';
 import 'package:woot/utils/ui_util.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
+import '../utils/user_util.dart';
 import '../widgets/misc_widgets.dart';
 
 class PolicyFormScreen extends StatefulWidget {
@@ -242,7 +243,7 @@ class _CarPolicyFormState extends State<CarPolicyForm> {
                   : DropdownInputField(
                       value: company,
                       width: 200,
-                      isRequire: true,
+                      require: true,
                       onEditingComplete: (value) => company = value!,
                       items: ServerData.insuranceCompanies,
                     ),
@@ -404,7 +405,7 @@ class _CarPolicyFormState extends State<CarPolicyForm> {
                   ),
                   TextUneditable(
                     width: 150,
-                    isCenter: true,
+                    center: true,
                     value: (netPremium != null && duty != null && tax != null)
                         ? ((netPremium! + duty! + tax!) *
                                 (100 - (premiumDiscountPercent ?? 0)) /
@@ -427,13 +428,15 @@ class _CarPolicyFormState extends State<CarPolicyForm> {
                   prefixLength: widget.editFrom!.data.policyNumber.length + 1,
                 ),
               ],
-              spacing,
-              FileUploader(
-                files: files,
-                onChanged: (value) => setState(() {
-                  files = value;
-                }),
-              ),
+              if (UserUtil.hasEditPermission) ...[
+                spacing,
+                FileUploader(
+                  files: files,
+                  onChanged: (value) => setState(() {
+                    files = value;
+                  }),
+                ),
+              ]
             ],
           ),
           if (isEditing) ...[
@@ -451,9 +454,9 @@ class _CarPolicyFormState extends State<CarPolicyForm> {
                     : const TextUneditable(
                         value: 'ยังไม่ชำระ',
                         width: 150,
-                        isCenter: true,
+                        center: true,
                       ),
-                if (!isPaid) ...[
+                if (!isPaid && UserUtil.hasEditPermission) ...[
                   spacing,
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -490,13 +493,15 @@ class _CarPolicyFormState extends State<CarPolicyForm> {
               ],
             ),
           ],
-          spacingVertical,
-          Center(
-            child: ElevatedButton(
-              onPressed: upload,
-              child: Text(isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน'),
+          if (UserUtil.hasEditPermission) ...[
+            spacingVertical,
+            Center(
+              child: ElevatedButton(
+                onPressed: upload,
+                child: Text(isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน'),
+              ),
             ),
-          )
+          ],
         ],
       ),
     );
@@ -704,7 +709,7 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                   : DropdownInputField(
                       value: company,
                       width: 200,
-                      isRequire: true,
+                      require: true,
                       onEditingComplete: (value) => company = value!,
                       items: ServerData.insuranceCompanies,
                     ),
@@ -1030,7 +1035,7 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                   ),
                   TextUneditable(
                     width: 150,
-                    isCenter: true,
+                    center: true,
                     value: (netPremium != null && duty != null && tax != null)
                         ? ((netPremium! + duty! + tax!) *
                                 (100 - (premiumDiscountPercent ?? 0)) /
@@ -1053,13 +1058,15 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                   prefixLength: widget.editFrom!.data.policyNumber.length + 1,
                 ),
               ],
-              spacing,
-              FileUploader(
-                files: files,
-                onChanged: (value) => setState(() {
-                  files = value;
-                }),
-              ),
+              if (UserUtil.hasEditPermission) ...[
+                spacing,
+                FileUploader(
+                  files: files,
+                  onChanged: (value) => setState(() {
+                    files = value;
+                  }),
+                ),
+              ],
             ],
           ),
           if (isEditing) ...[
@@ -1077,7 +1084,7 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                     : const TextUneditable(
                         value: 'ยังไม่ชำระ',
                         width: 150,
-                        isCenter: true,
+                        center: true,
                       ),
                 if (!isPaid) ...[
                   spacing,
@@ -1116,13 +1123,15 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
               ],
             ),
           ],
-          spacingVertical,
-          Center(
-            child: ElevatedButton(
-              onPressed: upload,
-              child: Text(isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน'),
+          if (UserUtil.hasEditPermission) ...[
+            spacingVertical,
+            Center(
+              child: ElevatedButton(
+                onPressed: upload,
+                child: Text(isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน'),
+              ),
             ),
-          )
+          ]
         ],
       ),
     );

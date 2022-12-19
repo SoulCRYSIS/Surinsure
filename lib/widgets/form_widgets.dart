@@ -102,7 +102,7 @@ class TextInputField extends StatelessWidget {
     this.initialValue,
     this.onlyDigit = false,
     this.onlyNumber = false,
-    this.width,
+    required this.width,
     required this.onChanged,
     this.validator,
     this.require = false,
@@ -115,7 +115,7 @@ class TextInputField extends StatelessWidget {
   final bool require;
   final bool onlyDigit;
   final bool onlyNumber;
-  final double? width;
+  final double width;
   final bool center;
 
   final void Function(String? value) onChanged;
@@ -189,13 +189,13 @@ class TextUneditable extends StatelessWidget {
   const TextUneditable({
     required this.value,
     required this.width,
-    this.isCenter = false,
+    this.center = false,
     super.key,
   });
 
   final String value;
   final double width;
-  final bool isCenter;
+  final bool center;
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +205,7 @@ class TextUneditable extends StatelessWidget {
       child: Center(
         child: Text(
           value,
-          textAlign: isCenter ? TextAlign.center : TextAlign.start,
+          textAlign: center ? TextAlign.center : TextAlign.start,
         ),
       ),
     );
@@ -334,7 +334,7 @@ class DropdownInputField extends StatelessWidget {
     this.value,
     this.label,
     this.validator,
-    this.isRequire = false,
+    this.require = false,
     required this.width,
     required this.items,
     required this.onEditingComplete,
@@ -346,7 +346,7 @@ class DropdownInputField extends StatelessWidget {
   final String? label;
   final String? value;
   final double width;
-  final bool isRequire;
+  final bool require;
   final void Function(String? value) onEditingComplete;
   final String? Function(String? value)? validator;
 
@@ -360,7 +360,7 @@ class DropdownInputField extends StatelessWidget {
           label: Text.rich(
             TextSpan(
               children: [
-                if (isRequire)
+                if (require)
                   TextSpan(
                       text: '*',
                       style: TextStyle(color: Theme.of(context).errorColor)),
@@ -379,7 +379,7 @@ class DropdownInputField extends StatelessWidget {
             )
             .toList(),
         onChanged: onEditingComplete,
-        validator: isRequire
+        validator: require
             ? (value) {
                 if (value == null || value.isEmpty) {
                   return 'จำเป็น';

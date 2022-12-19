@@ -8,6 +8,7 @@ import 'package:woot/screens/search_policies_screen.dart';
 import 'package:woot/screens/search_properties_screen.dart';
 import 'package:woot/utils/server_data.dart';
 import 'package:woot/utils/ui_util.dart';
+import 'package:woot/utils/user_util.dart';
 import 'package:woot/utils/validator.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
@@ -56,25 +57,26 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     formKey.currentState!.save();
 
     final customer = Customer(
-        assuredType: assuredType,
-        namePrefix: namePrefix,
-        identificationNumber: identificationNumber,
-        firstname: firstname,
-        surname: surname,
-        juristicName: isPerson ? null : juristicName,
-        province: province,
-        district: district,
-        subdistrict: subdistrict,
-        zipcode: zipcode,
-        houseNumber: houseNumber,
-        buildingOrVillage: buildingOrVillage,
-        villageNumber: villageNumber,
-        alley: alley,
-        lane: lane,
-        road: road,
-        phone: phone,
-        email: email,
-        groups: groups);
+      assuredType: assuredType,
+      namePrefix: namePrefix,
+      identificationNumber: identificationNumber,
+      firstname: firstname,
+      surname: surname,
+      juristicName: isPerson ? null : juristicName,
+      province: province,
+      district: district,
+      subdistrict: subdistrict,
+      zipcode: zipcode,
+      houseNumber: houseNumber,
+      buildingOrVillage: buildingOrVillage,
+      villageNumber: villageNumber,
+      alley: alley,
+      lane: lane,
+      road: road,
+      phone: phone,
+      email: email,
+      groups: groups,
+    );
     try {
       late final DocumentReference<Map<String, dynamic>> newDocRef;
       await UiUtil.loadingScreen(context,
@@ -213,20 +215,11 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                     children: [
                       const TopicText('ชื่อผู้เอาประกัน'),
                       spacing,
-                      SizedBox(
+                      DropdownInputField(
                         width: 100,
-                        child: DropdownButtonFormField(
-                          value: namePrefix,
-                          items: Constant.namePrefixes
-                              .map(
-                                (e) => DropdownMenuItem(
-                                  value: e,
-                                  child: Text(e),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) => namePrefix = value!,
-                        ),
+                        value: namePrefix,
+                        items: Constant.namePrefixes,
+                        onEditingComplete: (value) => namePrefix = value!,
                       ),
                       spacing,
                       TextInputField(
@@ -462,43 +455,53 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                                         require: true,
                                         onChanged: (value) =>
                                             groups[e.key] = value!,
-                                        noItemsFoundBuilder: (_) => ListTile(
-                                          onTap: () {
-                                            String input = groups[e.key];
-                                            UiUtil.confirmDialog(
-                                              context,
-                                              title: 'ชื่อกลุ่มที่ต้องการสร้าง',
-                                              content: TextInputField(
-                                                initialValue: input,
-                                                require: true,
-                                                width: 200,
-                                                onChanged: (value) =>
-                                                    input = value!,
-                                              ),
-                                              onConfirm: () async {
-                                                await ServerData.fetchData();
-                                                if (ServerData.customerGroups
-                                                    .contains(input)) {
-                                                  // ignore: use_build_context_synchronously
-                                                  UiUtil.snackbar(
-                                                      context, 'ชื่อกลุ่มซ้ำ');
-                                                } else {
-                                                  ServerData.addCustomerGroup(
-                                                      input);
-                                                  // ignore: use_build_context_synchronously
-                                                  UiUtil.snackbar(
-                                                      context, 'เพิ่มสำเร็จ',
-                                                      isError: false);
-                                                }
-                                                setState(() {});
-                                              },
-                                            );
-                                          },
-                                          title: const Text(
-                                            'สร้างกลุ่มใหม่',
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
+                                        noItemsFoundBuilder: !UserUtil
+                                                .hasEditPermission
+                                            ? null
+                                            : (_) => ListTile(
+                                                  onTap: () {
+                                                    String input =
+                                                        groups[e.key];
+                                                    UiUtil.confirmDialog(
+                                                      context,
+                                                      title:
+                                                          'ชื่อกลุ่มที่ต้องการสร้าง',
+                                                      content: TextInputField(
+                                                        initialValue: input,
+                                                        require: true,
+                                                        width: 200,
+                                                        onChanged: (value) =>
+                                                            input = value!,
+                                                      ),
+                                                      onConfirm: () async {
+                                                        await ServerData
+                                                            .fetchData();
+                                                        if (ServerData
+                                                            .customerGroups
+                                                            .contains(input)) {
+                                                          // ignore: use_build_context_synchronously
+                                                          UiUtil.snackbar(
+                                                              context,
+                                                              'ชื่อกลุ่มซ้ำ');
+                                                        } else {
+                                                          ServerData
+                                                              .addCustomerGroup(
+                                                                  input);
+                                                          // ignore: use_build_context_synchronously
+                                                          UiUtil.snackbar(
+                                                              context,
+                                                              'เพิ่มสำเร็จ',
+                                                              isError: false);
+                                                        }
+                                                        setState(() {});
+                                                      },
+                                                    );
+                                                  },
+                                                  title: const Text(
+                                                    'สร้างกลุ่มใหม่',
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
                                         validator: (value) {
                                           if (!ServerData.customerGroups
                                               .contains(value)) {
@@ -507,32 +510,34 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                                           return null;
                                         },
                                       ),
-                                      InkWell(
-                                        child: Icon(
-                                          Icons.remove_circle,
-                                          color: Theme.of(context).errorColor,
+                                      if (UserUtil.hasEditPermission)
+                                        InkWell(
+                                          child: Icon(
+                                            Icons.remove_circle,
+                                            color: Theme.of(context).errorColor,
+                                          ),
+                                          onTap: () => setState(() {
+                                            groups.removeAt(e.key);
+                                          }),
                                         ),
-                                        onTap: () => setState(() {
-                                          groups.removeAt(e.key);
-                                        }),
-                                      ),
                                     ],
                                   ),
                                 )
                                 .toList(),
-                            InkWell(
-                              child: SizedBox(
-                                height: 34,
-                                child: Icon(
-                                  Icons.add_circle,
-                                  size: 20,
-                                  color: Theme.of(context).primaryColor,
+                            if (UserUtil.hasEditPermission)
+                              InkWell(
+                                child: SizedBox(
+                                  height: 34,
+                                  child: Icon(
+                                    Icons.add_circle,
+                                    size: 20,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
                                 ),
+                                onTap: () => setState(() {
+                                  groups.add('');
+                                }),
                               ),
-                              onTap: () => setState(() {
-                                groups.add('');
-                              }),
-                            ),
                           ],
                         ),
                       ),
@@ -574,36 +579,39 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                             ),
                           ),
                         ),
-                        spacing,
+                        if (UserUtil.hasEditPermission) ...[
+                          spacing,
+                          ElevatedButton(
+                            onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PropertyFormScreen(
+                                    customerId: widget.editFrom!.id,
+                                    customerData: widget.editFrom!.data,
+                                  ),
+                                )),
+                            child: const SizedBox(
+                              width: 120,
+                              child: Text(
+                                'เพิ่มทรัพย์สิน',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          spacing,
+                        ]
+                      ],
+                      if (UserUtil.hasEditPermission)
                         ElevatedButton(
-                          onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PropertyFormScreen(
-                                  customerId: widget.editFrom!.id,
-                                  customerData: widget.editFrom!.data,
-                                ),
-                              )),
-                          child: const SizedBox(
+                          onPressed: upload,
+                          child: SizedBox(
                             width: 120,
                             child: Text(
-                              'เพิ่มทรัพย์สิน',
+                              isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน',
                               textAlign: TextAlign.center,
                             ),
                           ),
                         ),
-                        spacing,
-                      ],
-                      ElevatedButton(
-                        onPressed: upload,
-                        child: SizedBox(
-                          width: 120,
-                          child: Text(
-                            isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ],

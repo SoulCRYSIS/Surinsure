@@ -5,6 +5,7 @@ import 'package:woot/screens/customer_form_screen.dart';
 import 'package:woot/screens/search_policies_screen.dart';
 import 'package:woot/screens/search_properties_screen.dart';
 import 'package:woot/utils/server_data.dart';
+import 'package:woot/utils/user_util.dart';
 
 import '../utils/ui_util.dart';
 import '../widgets/misc_widgets.dart';
@@ -43,19 +44,21 @@ class _MenuScreenState extends State<MenuScreen> {
                 width: 500,
                 child: Column(
                   children: [
-                    SizedBox(
-                      width: 250,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CustomerFormScreen(),
+                    if (UserUtil.hasEditPermission) ...[
+                      SizedBox(
+                        width: 250,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CustomerFormScreen(),
+                            ),
                           ),
+                          child: const Text('ลงทะเบียนลูกค้าใหม่'),
                         ),
-                        child: const Text('ลงทะเบียนลูกค้าใหม่'),
                       ),
-                    ),
-                    spacingVertical,
+                      spacingVertical,
+                    ],
                     SizedBox(
                       width: 250,
                       child: ElevatedButton(

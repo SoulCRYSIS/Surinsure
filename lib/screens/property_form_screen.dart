@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:woot/models/property.dart';
 import 'package:woot/screens/policy_form_screen.dart';
 import 'package:woot/screens/search_policies_screen.dart';
+import 'package:woot/utils/user_util.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
 import '../constants/firestore_collection.dart';
@@ -346,36 +347,39 @@ class _CarPropertyFormState extends State<CarPropertyForm> {
                   ),
                 ),
                 spacing,
+                if (UserUtil.hasEditPermission) ...[
+                  ElevatedButton(
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PolicyFormScreen(
+                            propertyId: widget.editFrom!.id,
+                            customerId: widget.customerId,
+                            type: PropertyType.car,
+                          ),
+                        )),
+                    child: const SizedBox(
+                      width: 120,
+                      child: Text(
+                        'เพิ่มกรมธรรม์',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  spacing,
+                ],
+              ],
+              if (UserUtil.hasEditPermission)
                 ElevatedButton(
-                  onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PolicyFormScreen(
-                          propertyId: widget.editFrom!.id,
-                          customerId: widget.customerId,
-                          type: PropertyType.car,
-                        ),
-                      )),
-                  child: const SizedBox(
+                  onPressed: upload,
+                  child: SizedBox(
                     width: 120,
                     child: Text(
-                      'เพิ่มกรมธรรม์',
+                      isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน',
                       textAlign: TextAlign.center,
                     ),
                   ),
                 ),
-                spacing,
-              ],
-              ElevatedButton(
-                onPressed: upload,
-                child: SizedBox(
-                  width: 120,
-                  child: Text(
-                    isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
             ],
           ),
         ],
@@ -832,36 +836,39 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
                   ),
                 ),
                 spacing,
+                if (UserUtil.hasEditPermission) ...[
+                  ElevatedButton(
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PolicyFormScreen(
+                            propertyId: widget.editFrom!.id,
+                            customerId: widget.customerId,
+                            type: PropertyType.fire,
+                          ),
+                        )),
+                    child: const SizedBox(
+                      width: 120,
+                      child: Text(
+                        'เพิ่มกรมธรรม์',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  spacing,
+                ],
+              ],
+              if (UserUtil.hasEditPermission)
                 ElevatedButton(
-                  onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PolicyFormScreen(
-                          propertyId: widget.editFrom!.id,
-                          customerId: widget.customerId,
-                          type: PropertyType.fire,
-                        ),
-                      )),
-                  child: const SizedBox(
+                  onPressed: upload,
+                  child: SizedBox(
                     width: 120,
                     child: Text(
-                      'เพิ่มกรมธรรม์',
+                      isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน',
                       textAlign: TextAlign.center,
                     ),
                   ),
                 ),
-                spacing,
-              ],
-              ElevatedButton(
-                onPressed: upload,
-                child: SizedBox(
-                  width: 120,
-                  child: Text(
-                    isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
             ],
           ),
         ],
