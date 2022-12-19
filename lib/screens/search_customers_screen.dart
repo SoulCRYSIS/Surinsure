@@ -153,6 +153,7 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                       if (value.length != 13) {
                         return 'ความยาวไม่ถูกต้อง';
                       }
+                      return null;
                     },
                   ),
                   spacingVertical,

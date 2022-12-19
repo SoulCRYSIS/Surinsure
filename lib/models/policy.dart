@@ -60,7 +60,7 @@ abstract class Policy {
     company,
     isPaid ? 'ชำระแล้ว' : 'ยังไม่ชำระ',
     DateFormat('dd/MM/').format(policyIssueDate) +
-        (policyIssueDate.year + 543).toString()
+        (policyIssueDate.year + 543).toString(),
   ];
 
   static const List<String> headers = [
@@ -118,7 +118,7 @@ class CarPolicy extends Policy {
   CarPolicy({
     required super.customerId,
     required super.propertyId,
-    super.type = PropertyType.fire,
+    super.type = PropertyType.car,
     required super.policyNumber,
     required super.startDate,
     required super.endDate,

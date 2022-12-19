@@ -20,9 +20,6 @@ class SearchPropertiesScreen extends StatefulWidget {
 }
 
 class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
-  int? sortColumnIndex;
-  bool sortAscending = true;
-
   final formKey = GlobalKey<FormState>();
 
   // default fields
@@ -35,6 +32,12 @@ class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
   String district = '';
   String subdistrict = '';
   String zipcode = '';
+
+  // car fields
+  String registration = '';
+  String registrationProvince = '';
+  String brand = '';
+  String model = '';
 
   List<PropertyDocument>? docs;
 
@@ -56,9 +59,12 @@ class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
     if (customerId.isNotEmpty) {
       query = query.where('customerId', isEqualTo: customerId);
     }
+    if (type != null) {
+      query = query.where('type', isEqualTo: type!.name);
+    }
+
     switch (type) {
       case PropertyType.fire:
-        query = query.where('type', isEqualTo: type!.name);
         if (province.isNotEmpty) {
           query = query.where('province', isEqualTo: province);
         }
@@ -70,6 +76,20 @@ class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
         }
         if (zipcode.isNotEmpty) {
           query = query.where('zipcode', isEqualTo: zipcode);
+        }
+        break;
+      case PropertyType.car:
+        if (registration.isNotEmpty) {
+          query = query.where('province', isEqualTo: registration);
+        }
+        if (registrationProvince.isNotEmpty) {
+          query = query.where('province', isEqualTo: registrationProvince);
+        }
+        if (brand.isNotEmpty) {
+          query = query.where('brand', isEqualTo: brand.toLowerCase());
+        }
+        if (model.isNotEmpty) {
+          query = query.where('model', isEqualTo: model.toLowerCase());
         }
         break;
       case null:
@@ -241,7 +261,43 @@ class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
                             spacingVertical,
                           ];
                         case PropertyType.car:
-                          return [];
+                          return [
+                            TextInputField(
+                              width: 200,
+                              label: 'ทะเบียนรถ',
+                              onChanged: (value) => registration = value!,
+                            ),
+                            spacingVertical,
+                            DropdownSearchableInputField(
+                              value: province,
+                              width: 200,
+                              label: 'จังหวัด',
+                              items: GeoData.changwats,
+                              onEditingComplete: (value) => province = value!,
+                              validator: (value) {
+                                if (subdistrict.isEmpty) {
+                                  return null;
+                                }
+                                if (!GeoData.changwats.contains(province)) {
+                                  return 'ไม่พบชื่อนี้';
+                                }
+                                return null;
+                              },
+                            ),
+                            spacingVertical,
+                            TextInputField(
+                              width: 200,
+                              label: 'ยี่ห้อ',
+                              onChanged: (value) => brand = value!,
+                            ),
+                            spacingVertical,
+                            TextInputField(
+                              width: 200,
+                              label: 'รุ่น',
+                              onChanged: (value) => model = value!,
+                            ),
+                            spacingVertical,
+                          ];
                       }
                     }(),
                   Row(
@@ -283,55 +339,120 @@ class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
                             style: TextStyle(fontSize: 24, color: Colors.grey),
                           ),
                         )
-                      : BidirectionScroll(
-                          child: DataTable(
-                            showCheckboxColumn: false,
-                            sortColumnIndex: sortColumnIndex,
-                            sortAscending: sortAscending,
-                            columnSpacing: 10,
-                            columns: FireProperty.headers
-                                .map(
-                                  (e) => DataColumn(
-                                    label: Text(e),
-                                    onSort: (columnIndex, ascending) =>
-                                        setState(() {
-                                      sortColumnIndex = columnIndex;
-                                      sortAscending = ascending;
-                                      docs!.sort(
-                                        (a, b) =>
-                                            (ascending ? 1 : -1) *
-                                            a.data.asTextRow[columnIndex]
-                                                .compareTo(b.data
-                                                    .asTextRow[columnIndex]),
-                                      );
-                                    }),
-                                  ),
-                                )
-                                .toList(),
-                            rows: docs!
-                                .map((doc) => DataRow(
-                                      onSelectChanged: (value) {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  PropertyFormScreen(
-                                                editFrom: doc,
-                                                customerId: doc.data.customerId,
-                                              ),
-                                            ));
-                                      },
-                                      cells: doc.data.asTextRow
-                                          .map((e) => DataCell(Text(e)))
-                                          .toList(),
-                                    ))
-                                .toList(),
+                      : SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children:
+                                (type == null ? PropertyType.values : [type!])
+                                    .map(
+                              (thisType) {
+                                final thisTypeDocs = docs!
+                                    .where((element) =>
+                                        element.data.type == thisType)
+                                    .toList();
+                                if (thisTypeDocs.isEmpty) {
+                                  return Container();
+                                }
+                                return _Table(
+                                  docs: thisTypeDocs,
+                                  isShowTypeText: type == null,
+                                  type: thisType,
+                                );
+                              },
+                            ).toList(),
                           ),
                         ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _Table extends StatefulWidget {
+  const _Table({
+    required this.isShowTypeText,
+    required this.type,
+    required this.docs,
+  });
+
+  final bool isShowTypeText;
+  final PropertyType type;
+  final List<PropertyDocument> docs;
+
+  @override
+  State<_Table> createState() => __TableState();
+}
+
+class __TableState extends State<_Table> {
+  int? sortColumnIndex;
+  bool sortAscending = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.isShowTypeText)
+          Text(
+            widget.type.thai,
+            style: const TextStyle(
+                fontSize: 20, decoration: TextDecoration.underline),
+          ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            showCheckboxColumn: false,
+            sortColumnIndex: sortColumnIndex,
+            sortAscending: sortAscending,
+            columnSpacing: 10,
+            columns: () {
+              switch (widget.type) {
+                case PropertyType.fire:
+                  return FireProperty.headers;
+                case PropertyType.car:
+                  return CarProperty.headers;
+              }
+            }()
+                .map(
+                  (e) => DataColumn(
+                    label: Text(e),
+                    onSort: (columnIndex, ascending) => setState(() {
+                      sortColumnIndex = columnIndex;
+                      sortAscending = ascending;
+                      widget.docs.sort(
+                        (a, b) =>
+                            (ascending ? 1 : -1) *
+                            a.data.asTextRow[columnIndex]
+                                .compareTo(b.data.asTextRow[columnIndex]),
+                      );
+                    }),
+                  ),
+                )
+                .toList(),
+            rows: widget.docs
+                .map((doc) => DataRow(
+                      onSelectChanged: (value) {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PropertyFormScreen(
+                                editFrom: doc,
+                                customerId: doc.data.customerId,
+                              ),
+                            ));
+                      },
+                      cells: doc.data.asTextRow
+                          .map((e) => DataCell(Text(e)))
+                          .toList(),
+                    ))
+                .toList(),
+          ),
+        ),
+        spacingVertical,
+      ],
     );
   }
 }

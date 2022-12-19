@@ -22,9 +22,6 @@ class SearchPoliciesScreen extends StatefulWidget {
 }
 
 class _SearchPoliciesScreenState extends State<SearchPoliciesScreen> {
-  int? sortColumnIndex;
-  bool sortAscending = true;
-
   final formKey = GlobalKey<FormState>();
 
   late String customerId = widget.customerId ?? '';
@@ -217,57 +214,115 @@ class _SearchPoliciesScreenState extends State<SearchPoliciesScreen> {
                             style: TextStyle(fontSize: 24, color: Colors.grey),
                           ),
                         )
-                      : BidirectionScroll(
-                          child: DataTable(
-                            showCheckboxColumn: false,
-                            sortColumnIndex: sortColumnIndex,
-                            sortAscending: sortAscending,
-                            columnSpacing: 10,
-                            columns: Policy.headers
-                                .map(
-                                  (e) => DataColumn(
-                                    label: Text(e),
-                                    onSort: (columnIndex, ascending) =>
-                                        setState(() {
-                                      sortColumnIndex = columnIndex;
-                                      sortAscending = ascending;
-                                      docs!.sort(
-                                        (a, b) =>
-                                            (ascending ? 1 : -1) *
-                                            a.data.asTextRow[columnIndex]
-                                                .compareTo(b.data
-                                                    .asTextRow[columnIndex]),
-                                      );
-                                    }),
-                                  ),
-                                )
-                                .toList(),
-                            rows: docs!
-                                .map((doc) => DataRow(
-                                      onSelectChanged: (value) {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  PolicyFormScreen(
-                                                propertyId: doc.data.propertyId,
-                                                customerId: doc.data.customerId,
-                                                type: doc.data.type,
-                                                editFrom: doc,
-                                              ),
-                                            ));
-                                      },
-                                      cells: doc.data.asTextRow
-                                          .map((e) => DataCell(Text(e)))
-                                          .toList(),
-                                    ))
-                                .toList(),
+                      : SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children:
+                                (type == null ? PropertyType.values : [type!])
+                                    .map(
+                              (thisType) {
+                                final thisTypeDocs = docs!
+                                    .where((element) =>
+                                        element.data.type == thisType)
+                                    .toList();
+                                if (thisTypeDocs.isEmpty) {
+                                  return Container();
+                                }
+                                return _Table(
+                                  docs: thisTypeDocs,
+                                  isShowTypeText: type == null,
+                                  type: thisType,
+                                );
+                              },
+                            ).toList(),
                           ),
                         ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _Table extends StatefulWidget {
+  const _Table({
+    required this.isShowTypeText,
+    required this.type,
+    required this.docs,
+  });
+
+  final bool isShowTypeText;
+  final PropertyType type;
+  final List<PolicyDocument> docs;
+
+  @override
+  State<_Table> createState() => __TableState();
+}
+
+class __TableState extends State<_Table> {
+  int? sortColumnIndex;
+  bool sortAscending = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.isShowTypeText)
+          Text(
+            widget.type.thai,
+            style: const TextStyle(
+                fontSize: 20, decoration: TextDecoration.underline),
+          ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            showCheckboxColumn: false,
+            sortColumnIndex: sortColumnIndex,
+            sortAscending: sortAscending,
+            columnSpacing: 10,
+            columns: Policy.headers
+                .map(
+                  (e) => DataColumn(
+                    label: Text(e),
+                    onSort: (columnIndex, ascending) => setState(() {
+                      sortColumnIndex = columnIndex;
+                      sortAscending = ascending;
+                      widget.docs.sort(
+                        (a, b) =>
+                            (ascending ? 1 : -1) *
+                            a.data.asTextRow[columnIndex]
+                                .compareTo(b.data.asTextRow[columnIndex]),
+                      );
+                    }),
+                  ),
+                )
+                .toList(),
+            rows: widget.docs
+                .map((doc) => DataRow(
+                      onSelectChanged: (value) {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PolicyFormScreen(
+                                editFrom: doc,
+                                type: doc.data.type,
+                                propertyId: doc.data.propertyId,
+                                customerId: doc.data.customerId,
+                              ),
+                            ));
+                      },
+                      cells: doc.data.asTextRow
+                          .map((e) => DataCell(Text(e)))
+                          .toList(),
+                    ))
+                .toList(),
+          ),
+        ),
+        spacingVertical,
+      ],
     );
   }
 }

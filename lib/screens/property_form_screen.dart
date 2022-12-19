@@ -144,8 +144,8 @@ class _CarPropertyFormState extends State<CarPropertyForm> {
       registration: registration,
       registrationProvince: registrationProvince,
       code: code,
-      brand: brand,
-      model: model,
+      brand: brand.toLowerCase(),
+      model: model.toLowerCase(),
       bodyId: bodyId,
       engineId: engineId,
       color: color,
@@ -353,7 +353,7 @@ class _CarPropertyFormState extends State<CarPropertyForm> {
                         builder: (context) => PolicyFormScreen(
                           propertyId: widget.editFrom!.id,
                           customerId: widget.customerId,
-                          type: PropertyType.fire,
+                          type: PropertyType.car,
                         ),
                       )),
                   child: const SizedBox(
