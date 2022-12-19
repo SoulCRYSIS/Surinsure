@@ -151,11 +151,10 @@ class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
                       switch (type!) {
                         case PropertyType.fire:
                           return [
-                            DropdownInputField(
+                            DropdownSearchableInputField(
                               value: province,
                               width: 200,
                               label: 'จังหวัด',
-                              isSearchable: true,
                               items: GeoData.changwats,
                               onEditingComplete: (value) {
                                 if (province != value) {
@@ -177,11 +176,10 @@ class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
                               },
                             ),
                             spacingVertical,
-                            DropdownInputField(
+                            DropdownSearchableInputField(
                               value: district,
                               width: 200,
                               label: 'เขต/อำเภอ',
-                              isSearchable: true,
                               items: GeoData.amphoes[province] ?? [],
                               onEditingComplete: (value) {
                                 if (district != value) {
@@ -204,11 +202,10 @@ class _SearchPropertiesScreenState extends State<SearchPropertiesScreen> {
                               },
                             ),
                             spacingVertical,
-                            DropdownInputField(
+                            DropdownSearchableInputField(
                               value: subdistrict,
                               width: 200,
                               label: 'แขวง/ตำบล',
-                              isSearchable: true,
                               items: GeoData.tambons[province]?[district] ?? [],
                               onEditingComplete: (value) =>
                                   subdistrict = value!,

@@ -10,14 +10,9 @@ class UiUtil {
   static Future<void> confirmDialog(
     BuildContext context, {
     required String title,
-    required String description,
+    required Widget content,
     required Function() onConfirm,
   }) async {
-    final dialogTxtBtn = TextStyle(
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
-      color: Colors.indigo.shade800,
-    );
     Completer completer = Completer();
     await showDialog(
       context: context,
@@ -33,30 +28,26 @@ class UiUtil {
               fontWeight: FontWeight.w600,
             ),
           ),
-          content: Container(
-            color: Colors.white,
-            width: 300,
-            child: Text(
-              description,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
+          content: content,
           actions: [
-            TextButton(
-              child: Text("ยกเลิก", style: dialogTxtBtn),
+            ElevatedButton(
+              child: const Text(
+                "ยกเลิก",
+                style: TextStyle(fontSize: 14),
+              ),
               onPressed: () => Navigator.pop(context),
             ),
-            TextButton(
-              child: Text("ยืนยัน", style: dialogTxtBtn),
+            ElevatedButton(
+              child: const Text(
+                "ยืนยัน",
+                style: TextStyle(fontSize: 14),
+              ),
               onPressed: () async {
                 Navigator.pop(context);
                 await onConfirm();
                 completer.complete();
               },
-            )
+            ),
           ],
         );
       },

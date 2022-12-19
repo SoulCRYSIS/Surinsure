@@ -18,11 +18,14 @@ class TopicText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
+      height: 34,
       width: 150,
-      child: Text(
-        '$text :',
-        textAlign: TextAlign.right,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Text(
+          '$text :',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
@@ -233,12 +236,103 @@ class FieldBorder extends StatelessWidget {
   }
 }
 
+class DropdownSearchableInputField extends StatelessWidget {
+  const DropdownSearchableInputField({
+    this.hint,
+    this.value,
+    this.label,
+    this.validator,
+    this.isRequire = false,
+    required this.width,
+    required this.items,
+    this.onEditingComplete,
+    this.onChanged,
+    this.noItemsFoundBuilder,
+    super.key,
+  });
+
+  final List<String> items;
+  final String? hint;
+  final String? label;
+  final String? value;
+  final double width;
+  final bool isRequire;
+  final void Function(String? value)? onEditingComplete;
+  final void Function(String? value)? onChanged;
+  final String? Function(String? value)? validator;
+  final Widget Function(BuildContext context)? noItemsFoundBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextEditingController textEditingController =
+        TextEditingController(text: value);
+    if (onChanged != null) {
+      textEditingController.addListener(
+        () => onChanged!(textEditingController.text),
+      );
+    }
+    return SizedBox(
+      width: width,
+      child: Focus(
+        skipTraversal: true,
+        onFocusChange: onEditingComplete != null
+            ? (value) {
+                if (!value) {
+                  onEditingComplete!(textEditingController.text);
+                }
+              }
+            : null,
+        child: TypeAheadFormField(
+          animationDuration: const Duration(),
+          debounceDuration: const Duration(milliseconds: 100),
+          textFieldConfiguration: TextFieldConfiguration(
+            controller: textEditingController,
+            decoration: InputDecoration(
+              label: Text.rich(
+                TextSpan(
+                  children: [
+                    if (isRequire)
+                      TextSpan(
+                          text: '*',
+                          style:
+                              TextStyle(color: Theme.of(context).errorColor)),
+                    if (label != null) TextSpan(text: label),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          suggestionsCallback: (pattern) =>
+              items.where((item) => item.contains(pattern)),
+          itemBuilder: (context, itemData) => ListTile(
+            title: Text(itemData),
+          ),
+          onSuggestionSelected: (suggestion) {
+            if (onEditingComplete != null) {
+              onEditingComplete!(suggestion);
+            }
+            textEditingController.text = suggestion;
+          },
+          noItemsFoundBuilder: noItemsFoundBuilder ??
+              (context) => const ListTile(
+                    title: Text(
+                      'ไม่พบรายการ',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+          autoFlipDirection: true,
+          validator: isRequire ? Validator.notEmpty(validator) : validator,
+        ),
+      ),
+    );
+  }
+}
+
 class DropdownInputField extends StatelessWidget {
   const DropdownInputField({
     this.hint,
     this.value,
     this.label,
-    this.isSearchable = false,
     this.validator,
     this.isRequire = false,
     required this.width,
@@ -246,108 +340,57 @@ class DropdownInputField extends StatelessWidget {
     required this.onEditingComplete,
     super.key,
   });
+
   final List<String> items;
   final String? hint;
   final String? label;
   final String? value;
   final double width;
   final bool isRequire;
-  final bool isSearchable;
   final void Function(String? value) onEditingComplete;
   final String? Function(String? value)? validator;
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController textEditingController =
-        TextEditingController(text: value);
     return SizedBox(
       width: width,
-      child: isSearchable
-          ? Focus(
-              skipTraversal: true,
-              onFocusChange: (value) {
-                if (!value) {
-                  onEditingComplete(textEditingController.text);
-                }
-              },
-              child: TypeAheadFormField(
-                animationDuration: const Duration(),
-                debounceDuration: const Duration(milliseconds: 100),
-                textFieldConfiguration: TextFieldConfiguration(
-                  controller: textEditingController,
-                  decoration: InputDecoration(
-                    label: Text.rich(
-                      TextSpan(
-                        children: [
-                          if (isRequire)
-                            TextSpan(
-                                text: '*',
-                                style: TextStyle(
-                                    color: Theme.of(context).errorColor)),
-                          if (label != null) TextSpan(text: label),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                suggestionsCallback: (pattern) =>
-                    items.where((item) => item.contains(pattern)),
-                itemBuilder: (context, itemData) => ListTile(
-                  title: Text(itemData),
-                ),
-                onSuggestionSelected: (suggestion) {
-                  onEditingComplete(suggestion);
-                  textEditingController.text = suggestion;
-                },
-                noItemsFoundBuilder: (context) => const ListTile(
-                  title: Text(
-                    'ไม่พบรายการ',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                autoFlipDirection: true,
-                validator:
-                    isRequire ? Validator.notEmpty(validator) : validator,
+      child: DropdownButtonFormField<String>(
+        value: value,
+        decoration: InputDecoration(
+          label: Text.rich(
+            TextSpan(
+              children: [
+                if (isRequire)
+                  TextSpan(
+                      text: '*',
+                      style: TextStyle(color: Theme.of(context).errorColor)),
+                if (label != null) TextSpan(text: label),
+              ],
+            ),
+          ),
+        ),
+        hint: hint == null ? null : Text(hint!),
+        items: items
+            .map(
+              (e) => DropdownMenuItem(
+                value: e,
+                child: Text(e),
               ),
             )
-          : DropdownButtonFormField<String>(
-              value: value,
-              decoration: InputDecoration(
-                label: Text.rich(
-                  TextSpan(
-                    children: [
-                      if (isRequire)
-                        TextSpan(
-                            text: '*',
-                            style:
-                                TextStyle(color: Theme.of(context).errorColor)),
-                      if (label != null) TextSpan(text: label),
-                    ],
-                  ),
-                ),
-              ),
-              hint: hint == null ? null : Text(hint!),
-              items: items
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(e),
-                    ),
-                  )
-                  .toList(),
-              onChanged: onEditingComplete,
-              validator: isRequire
-                  ? (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'จำเป็น';
-                      }
-                      if (validator != null) {
-                        return validator!(value);
-                      }
-                      return null;
-                    }
-                  : validator,
-            ),
+            .toList(),
+        onChanged: onEditingComplete,
+        validator: isRequire
+            ? (value) {
+                if (value == null || value.isEmpty) {
+                  return 'จำเป็น';
+                }
+                if (validator != null) {
+                  return validator!(value);
+                }
+                return null;
+              }
+            : validator,
+      ),
     );
   }
 }

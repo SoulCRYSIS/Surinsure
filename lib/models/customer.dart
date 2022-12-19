@@ -22,6 +22,7 @@ class Customer {
   final String road;
   final String phone;
   final String email;
+  final List<String> groups;
 
   Customer({
     required this.assuredType,
@@ -42,6 +43,7 @@ class Customer {
     required this.road,
     required this.phone,
     required this.email,
+    required this.groups,
   });
 
   //Constructor and Function from package 'json_serializable'

@@ -6,6 +6,7 @@ import 'package:woot/models/customer.dart';
 import 'package:woot/screens/property_form_screen.dart';
 import 'package:woot/screens/search_policies_screen.dart';
 import 'package:woot/screens/search_properties_screen.dart';
+import 'package:woot/utils/server_data.dart';
 import 'package:woot/utils/ui_util.dart';
 import 'package:woot/utils/validator.dart';
 import 'package:woot/widgets/form_widgets.dart';
@@ -41,6 +42,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
   String road = '';
   String phone = '';
   String email = '';
+  List<String> groups = [];
 
   final formKey = GlobalKey<FormState>();
 
@@ -54,25 +56,25 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     formKey.currentState!.save();
 
     final customer = Customer(
-      assuredType: assuredType,
-      namePrefix: namePrefix,
-      identificationNumber: identificationNumber,
-      firstname: firstname,
-      surname: surname,
-      juristicName: isPerson ? null : juristicName,
-      province: province,
-      district: district,
-      subdistrict: subdistrict,
-      zipcode: zipcode,
-      houseNumber: houseNumber,
-      buildingOrVillage: buildingOrVillage,
-      villageNumber: villageNumber,
-      alley: alley,
-      lane: lane,
-      road: road,
-      phone: phone,
-      email: email,
-    );
+        assuredType: assuredType,
+        namePrefix: namePrefix,
+        identificationNumber: identificationNumber,
+        firstname: firstname,
+        surname: surname,
+        juristicName: isPerson ? null : juristicName,
+        province: province,
+        district: district,
+        subdistrict: subdistrict,
+        zipcode: zipcode,
+        houseNumber: houseNumber,
+        buildingOrVillage: buildingOrVillage,
+        villageNumber: villageNumber,
+        alley: alley,
+        lane: lane,
+        road: road,
+        phone: phone,
+        email: email,
+        groups: groups);
     try {
       late final DocumentReference<Map<String, dynamic>> newDocRef;
       await UiUtil.loadingScreen(context,
@@ -123,6 +125,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
       road = e.road;
       phone = e.phone;
       email = e.email;
+      groups = e.groups;
     }
     super.initState();
   }
@@ -289,11 +292,10 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                     children: [
                       const SizedBox(width: 150),
                       spacing,
-                      DropdownInputField(
+                      DropdownSearchableInputField(
                         value: province,
                         width: 200,
                         label: 'จังหวัด',
-                        isSearchable: true,
                         items: GeoData.changwats,
                         onEditingComplete: (value) {
                           if (province != value) {
@@ -313,11 +315,10 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         isRequire: true,
                       ),
                       spacing,
-                      DropdownInputField(
+                      DropdownSearchableInputField(
                         value: district,
                         width: 200,
                         label: 'เขต/อำเภอ',
-                        isSearchable: true,
                         items: GeoData.amphoes[province] ?? [],
                         onEditingComplete: (value) {
                           if (district != value) {
@@ -339,11 +340,10 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         isRequire: true,
                       ),
                       spacing,
-                      DropdownInputField(
+                      DropdownSearchableInputField(
                         value: subdistrict,
                         width: 200,
                         label: 'แขวง/ตำบล',
-                        isSearchable: true,
                         items: GeoData.tambons[province]?[district] ?? [],
                         onEditingComplete: (value) => setState(() {
                           subdistrict = value!;
@@ -432,6 +432,109 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         initialValue: email,
                         onChanged: (value) => email = value!,
                         label: 'อีเมล',
+                      ),
+                    ],
+                  ),
+                  spacingVertical,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const TopicText('กลุ่ม'),
+                      spacing,
+                      SizedBox(
+                        width: 640,
+                        child: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 20,
+                          runSpacing: 20,
+                          children: [
+                            ...groups
+                                .asMap()
+                                .entries
+                                .map(
+                                  (e) => Stack(
+                                    alignment: AlignmentDirectional.topEnd,
+                                    children: [
+                                      DropdownSearchableInputField(
+                                        value: e.value,
+                                        items: ServerData.customerGroups,
+                                        width: 200,
+                                        isRequire: true,
+                                        onChanged: (value) =>
+                                            groups[e.key] = value!,
+                                        noItemsFoundBuilder: (_) => ListTile(
+                                          onTap: () {
+                                            String input = groups[e.key];
+                                            UiUtil.confirmDialog(
+                                              context,
+                                              title: 'ชื่อกลุ่มที่ต้องการสร้าง',
+                                              content: TextInputField(
+                                                initialValue: input,
+                                                require: true,
+                                                width: 200,
+                                                onChanged: (value) =>
+                                                    input = value!,
+                                              ),
+                                              onConfirm: () async {
+                                                await ServerData.fetchData();
+                                                if (ServerData.customerGroups
+                                                    .contains(input)) {
+                                                  // ignore: use_build_context_synchronously
+                                                  UiUtil.snackbar(
+                                                      context, 'ชื่อกลุ่มซ้ำ');
+                                                } else {
+                                                  ServerData.addCustomerGroup(
+                                                      input);
+                                                  // ignore: use_build_context_synchronously
+                                                  UiUtil.snackbar(
+                                                      context, 'เพิ่มสำเร็จ',
+                                                      isError: false);
+                                                }
+                                                setState(() {});
+                                              },
+                                            );
+                                          },
+                                          title: const Text(
+                                            'สร้างกลุ่มใหม่',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                        validator: (value) {
+                                          if (!ServerData.customerGroups
+                                              .contains(value)) {
+                                            return 'ไม่พบกลุ่มนี้ กรุณาสร้างกลุ่มใหม่';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      InkWell(
+                                        child: Icon(
+                                          Icons.remove_circle,
+                                          color: Theme.of(context).errorColor,
+                                        ),
+                                        onTap: () => setState(() {
+                                          groups.removeAt(e.key);
+                                        }),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                                .toList(),
+                            InkWell(
+                              child: SizedBox(
+                                height: 34,
+                                child: Icon(
+                                  Icons.add_circle,
+                                  size: 20,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                              onTap: () => setState(() {
+                                groups.add('');
+                              }),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

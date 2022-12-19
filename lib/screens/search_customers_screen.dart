@@ -4,6 +4,7 @@ import 'package:woot/constants/constant.dart';
 import 'package:woot/constants/firestore_collection.dart';
 import 'package:woot/constants/geo_data.dart';
 import 'package:woot/screens/customer_form_screen.dart';
+import 'package:woot/utils/server_data.dart';
 import 'package:woot/utils/ui_util.dart';
 import 'package:woot/widgets/form_widgets.dart';
 
@@ -33,6 +34,7 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
   String subdistrict = '';
   String zipcode = '';
   String identificationNumber = '';
+  String group = '';
 
   List<CustomerDocument>? docs;
 
@@ -154,6 +156,22 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                     },
                   ),
                   spacingVertical,
+                  DropdownSearchableInputField(
+                    items: ServerData.customerGroups,
+                    width: 200,
+                    label: 'กลุ่ม',
+                    onEditingComplete: (value) => group = value!,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return null;
+                      }
+                      if (!ServerData.customerGroups.contains(value)) {
+                        return 'ไม่พบกลุ่มนี้';
+                      }
+                      return null;
+                    },
+                  ),
+                  spacingVertical,
                   TextInputField(
                     width: 200,
                     label: 'ชื่อจริง',
@@ -168,11 +186,10 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                     onChanged: (value) => surname = value!,
                   ),
                   spacingVertical,
-                  DropdownInputField(
+                  DropdownSearchableInputField(
                     value: province,
                     width: 200,
                     label: 'จังหวัด',
-                    isSearchable: true,
                     items: GeoData.changwats,
                     onEditingComplete: (value) {
                       if (province != value) {
@@ -194,11 +211,10 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                     },
                   ),
                   spacingVertical,
-                  DropdownInputField(
+                  DropdownSearchableInputField(
                     value: district,
                     width: 200,
                     label: 'เขต/อำเภอ',
-                    isSearchable: true,
                     items: GeoData.amphoes[province] ?? [],
                     onEditingComplete: (value) {
                       if (district != value) {
@@ -220,11 +236,10 @@ class _SearchCustomersScreenState extends State<SearchCustomersScreen> {
                     },
                   ),
                   spacingVertical,
-                  DropdownInputField(
+                  DropdownSearchableInputField(
                     value: subdistrict,
                     width: 200,
                     label: 'แขวง/ตำบล',
-                    isSearchable: true,
                     items: GeoData.tambons[province]?[district] ?? [],
                     onEditingComplete: (value) => setState(() {
                       subdistrict = value!;

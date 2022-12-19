@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_web_libraries_in_flutter
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:woot/constants/firestore_collection.dart';
@@ -8,9 +9,28 @@ import 'connection_util.dart';
 class ServerData {
   ServerData._();
 
-  static late List<String> _insuranceCompanies;
+  static final DocumentReference<Map<String, dynamic>> _doc =
+      FirestoreCollection.data.doc('main');
 
-  static get insuranceCompanies => _insuranceCompanies;
+  static late List<String> _insuranceCompanies;
+  static late List<String> _customerGroups;
+
+  static List<String> get insuranceCompanies => _insuranceCompanies;
+  static List<String> get customerGroups => _customerGroups;
+
+  static addInsuranceCompanies(String name) async {
+    _insuranceCompanies.add(name);
+    await _doc.update({
+      'insuranceCompanies': _insuranceCompanies,
+    });
+  }
+
+  static addCustomerGroup(String name) async {
+    _customerGroups.add(name);
+    await _doc.update({
+      'customerGroups': _customerGroups,
+    });
+  }
 
   static Future<void> uploadFile(PlatformFile file, String name) async {
     await ConnectionUtil.setTimeout(
@@ -31,11 +51,8 @@ class ServerData {
     _insuranceCompanies = (json['insuranceCompanies'] as List<dynamic>)
         .map((e) => e as String)
         .toList();
-  }
-
-  static Future<void> updateData() async {
-    await FirestoreCollection.data.doc('main').set({
-      'insuranceCompanies': _insuranceCompanies,
-    });
+    _customerGroups = (json['customerGroups'] as List<dynamic>)
+        .map((e) => e as String)
+        .toList();
   }
 }

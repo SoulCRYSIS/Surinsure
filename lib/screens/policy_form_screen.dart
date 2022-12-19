@@ -268,6 +268,44 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                       onEditingComplete: (value) => company = value!,
                       items: ServerData.insuranceCompanies,
                     ),
+              if (!isEditing) ...[
+                spacing,
+                InkWell(
+                  child: SizedBox(
+                    height: 34,
+                    child: Icon(
+                      Icons.add_circle,
+                      size: 20,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  onTap: () {
+                    String input = '';
+                    UiUtil.confirmDialog(
+                      context,
+                      title: 'ชื่อบริษัทที่ต้องการเพิ่ม',
+                      content: TextInputField(
+                        initialValue: input,
+                        require: true,
+                        width: 200,
+                        onChanged: (value) => input = value!,
+                      ),
+                      onConfirm: () async {
+                        await ServerData.fetchData();
+                        if (ServerData.insuranceCompanies.contains(input)) {
+                          // ignore: use_build_context_synchronously
+                          UiUtil.snackbar(context, 'ชื่อบริษัทซ้ำ');
+                        } else {
+                          ServerData.addInsuranceCompanies(input);
+                          // ignore: use_build_context_synchronously
+                          UiUtil.snackbar(context, 'เพิ่มสำเร็จ', isError: false);
+                        }
+                        setState(() {});
+                      },
+                    );
+                  },
+                ),
+              ]
             ],
           ),
           spacingVertical,
@@ -610,7 +648,8 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                         await UiUtil.confirmDialog(
                           context,
                           title: 'ยืนยันการชำระ?',
-                          description: 'เมื่อกดยืนยัน จะไม่สามารถยกเลิกได้',
+                          content:
+                              const Text('เมื่อกดยืนยัน จะไม่สามารถยกเลิกได้'),
                           onConfirm: () {
                             return UiUtil.loadingScreen(
                               context,
