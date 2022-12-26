@@ -69,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: Icon(Icons.email),
                       labelText: 'Email',
                     ),
+                    autofillHints: const ['email'],
                     onChanged: (value) {
                       email = value;
                     },
@@ -83,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: Icon(Icons.key),
                       labelText: 'Password',
                     ),
+                    autofillHints: const ['password'],
                     onChanged: (value) {
                       password = value;
                     },

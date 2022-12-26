@@ -13,4 +13,5 @@ class Constant {
   ];
 
   static const lastChar = '\uf8ff';
+  static const confirmPin = '123456';
 }

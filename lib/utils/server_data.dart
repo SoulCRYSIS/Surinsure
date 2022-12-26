@@ -18,7 +18,7 @@ class ServerData {
   static List<String> get insuranceCompanies => _insuranceCompanies;
   static List<String> get customerGroups => _customerGroups;
 
-  static addInsuranceCompanies(String name) async {
+  static void addInsuranceCompanies(String name) async {
     _insuranceCompanies.add(name);
     await _doc.update({
       'insuranceCompanies': _insuranceCompanies,

@@ -136,10 +136,6 @@ class _CarPropertyFormState extends State<CarPropertyForm> {
   bool get isEditing => widget.editFrom != null;
 
   Future<void> upload() async {
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
-
     final property = CarProperty(
       customerId: widget.customerId,
       registration: registration,
@@ -371,7 +367,13 @@ class _CarPropertyFormState extends State<CarPropertyForm> {
               ],
               if (UserUtil.hasEditPermission)
                 ElevatedButton(
-                  onPressed: upload,
+                  onPressed: () {
+                    if (!formKey.currentState!.validate()) {
+                      return;
+                    }
+                    formKey.currentState!.save();
+                    UiUtil.confirmPin(context, onConfirm: upload);
+                  },
                   child: SizedBox(
                     width: 120,
                     child: Text(
@@ -442,10 +444,6 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
   }
 
   Future<void> upload() async {
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
-
     final property = FireProperty(
       customerId: widget.customerId,
       province: province,
@@ -860,7 +858,13 @@ class _FirePropertyFormState extends State<FirePropertyForm> {
               ],
               if (UserUtil.hasEditPermission)
                 ElevatedButton(
-                  onPressed: upload,
+                  onPressed: () {
+                    if (!formKey.currentState!.validate()) {
+                      return;
+                    }
+                    formKey.currentState!.save();
+                    UiUtil.confirmPin(context, onConfirm: upload);
+                  },
                   child: SizedBox(
                     width: 120,
                     child: Text(

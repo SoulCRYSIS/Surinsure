@@ -105,10 +105,6 @@ class _CarPolicyFormState extends State<CarPolicyForm> {
 
   bool get isEditing => widget.editFrom != null;
   Future<void> upload() async {
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
-    formKey.currentState!.save();
     policyNumber = policyNumber.replaceAll('/', '_');
 
     final docRef = FirestoreCollection.policies.doc(policyNumber);
@@ -269,8 +265,10 @@ class _CarPolicyFormState extends State<CarPolicyForm> {
                         width: 200,
                         onChanged: (value) => input = value!,
                       ),
-                      onConfirm: () async {
-                        await ServerData.fetchData();
+                      onConfirm: (closeDialog) async {
+                        closeDialog();
+                        await UiUtil.loadingScreen(context,
+                            timeoutSecond: 2, future: ServerData.fetchData());
                         if (ServerData.insuranceCompanies.contains(input)) {
                           // ignore: use_build_context_synchronously
                           UiUtil.snackbar(context, 'ชื่อบริษัทซ้ำ');
@@ -468,17 +466,16 @@ class _CarPolicyFormState extends State<CarPolicyForm> {
                           title: 'ยืนยันการชำระ?',
                           content:
                               const Text('เมื่อกดยืนยัน จะไม่สามารถยกเลิกได้'),
-                          onConfirm: () {
-                            return UiUtil.loadingScreen(
+                          onConfirm: (closeDialog) async {
+                            closeDialog();
+                            isPaid = true;
+                            paymentDate = DateTime.now();
+                            await UiUtil.loadingScreen(
                               context,
                               timeoutSecond: 3,
-                              future: () async {
-                                isPaid = true;
-                                paymentDate = DateTime.now();
-                                await upload();
-                                setState(() {});
-                              }(),
+                              future: upload(),
                             );
+                            setState(() {});
                           },
                         );
                       } catch (e) {
@@ -497,7 +494,13 @@ class _CarPolicyFormState extends State<CarPolicyForm> {
             spacingVertical,
             Center(
               child: ElevatedButton(
-                onPressed: upload,
+                onPressed: () {
+                            if (!formKey.currentState!.validate()) {
+                              return;
+                            }
+                            formKey.currentState!.save();
+                            UiUtil.confirmPin(context, onConfirm: upload);
+                          },
                 child: Text(isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน'),
               ),
             ),
@@ -557,10 +560,6 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
 
   bool get isEditing => widget.editFrom != null;
   Future<void> upload() async {
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
-    formKey.currentState!.save();
     policyNumber = policyNumber.replaceAll('/', '_');
 
     final docRef = FirestoreCollection.policies.doc(policyNumber);
@@ -735,8 +734,10 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                         width: 200,
                         onChanged: (value) => input = value!,
                       ),
-                      onConfirm: () async {
-                        await ServerData.fetchData();
+                      onConfirm: (closeDialog) async {
+                        closeDialog();
+                        await UiUtil.loadingScreen(context,
+                            timeoutSecond: 2, future: ServerData.fetchData());
                         if (ServerData.insuranceCompanies.contains(input)) {
                           // ignore: use_build_context_synchronously
                           UiUtil.snackbar(context, 'ชื่อบริษัทซ้ำ');
@@ -1098,17 +1099,16 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
                           title: 'ยืนยันการชำระ?',
                           content:
                               const Text('เมื่อกดยืนยัน จะไม่สามารถยกเลิกได้'),
-                          onConfirm: () {
-                            return UiUtil.loadingScreen(
+                          onConfirm: (closeDialog) async {
+                            closeDialog();
+                            isPaid = true;
+                            paymentDate = DateTime.now();
+                            await UiUtil.loadingScreen(
                               context,
                               timeoutSecond: 3,
-                              future: () async {
-                                isPaid = true;
-                                paymentDate = DateTime.now();
-                                await upload();
-                                setState(() {});
-                              }(),
+                              future: upload(),
                             );
+                            setState(() {});
                           },
                         );
                       } catch (e) {
@@ -1127,7 +1127,13 @@ class _FirePolcyFormState extends State<FirePolcyForm> {
             spacingVertical,
             Center(
               child: ElevatedButton(
-                onPressed: upload,
+                onPressed: () {
+                            if (!formKey.currentState!.validate()) {
+                              return;
+                            }
+                            formKey.currentState!.save();
+                            UiUtil.confirmPin(context, onConfirm: upload);
+                          },
                 child: Text(isEditing ? 'บันทึกการแก้ไข' : 'ลงทะเบียน'),
               ),
             ),

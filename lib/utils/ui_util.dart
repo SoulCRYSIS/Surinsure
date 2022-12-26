@@ -1,17 +1,47 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:woot/constants/constant.dart';
+import 'package:woot/widgets/form_widgets.dart';
 
 import 'connection_util.dart';
 
 class UiUtil {
   UiUtil._();
 
+  static Future<void> confirmPin(
+    BuildContext context, {
+    required Function() onConfirm,
+  }) async {
+    final formKey = GlobalKey<FormState>();
+    await confirmDialog(
+      context,
+      title: 'ใส่ Pin เพื่อยืนยัน',
+      content: Form(
+        key: formKey,
+        child: TextInputField(
+          width: 150,
+          onlyDigit: true,
+          onChanged: (value) {},
+          validator: (value) =>
+              value != Constant.confirmPin ? 'รหัสไม่ถูกต้อง' : null,
+        ),
+      ),
+      onConfirm: (closeDialog) async {
+        if (!formKey.currentState!.validate()) {
+          return;
+        }
+        closeDialog();
+        await onConfirm();
+      },
+    );
+  }
+
   static Future<void> confirmDialog(
     BuildContext context, {
     required String title,
     required Widget content,
-    required Function() onConfirm,
+    required Function(void Function() closeDialog) onConfirm,
   }) async {
     Completer completer = Completer();
     await showDialog(
@@ -43,8 +73,7 @@ class UiUtil {
                 style: TextStyle(fontSize: 14),
               ),
               onPressed: () async {
-                Navigator.pop(context);
-                await onConfirm();
+                await onConfirm((() => Navigator.pop(context)));
                 completer.complete();
               },
             ),

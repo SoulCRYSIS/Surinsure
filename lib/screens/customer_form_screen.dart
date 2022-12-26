@@ -51,11 +51,6 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
   bool get isEditing => widget.editFrom != null;
 
   Future<void> upload() async {
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
-    formKey.currentState!.save();
-
     final customer = Customer(
       assuredType: assuredType,
       namePrefix: namePrefix,
@@ -473,9 +468,17 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                                                         onChanged: (value) =>
                                                             input = value!,
                                                       ),
-                                                      onConfirm: () async {
-                                                        await ServerData
-                                                            .fetchData();
+                                                      onConfirm:
+                                                          (closeDialog) async {
+                                                        closeDialog();
+                                                        await UiUtil
+                                                            .loadingScreen(
+                                                          context,
+                                                          timeoutSecond: 2,
+                                                          future: ServerData
+                                                              .fetchData(),
+                                                        );
+
                                                         if (ServerData
                                                             .customerGroups
                                                             .contains(input)) {
@@ -603,7 +606,13 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       ],
                       if (UserUtil.hasEditPermission)
                         ElevatedButton(
-                          onPressed: upload,
+                          onPressed: () {
+                            if (!formKey.currentState!.validate()) {
+                              return;
+                            }
+                            formKey.currentState!.save();
+                            UiUtil.confirmPin(context, onConfirm: upload);
+                          },
                           child: SizedBox(
                             width: 120,
                             child: Text(
