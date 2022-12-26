@@ -51,52 +51,56 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.all(8.0),
         child: Center(
           child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'เข้าสู่ระบบ',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Container(
-                  width: 400,
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.email),
-                      labelText: 'Email',
+            child: AutofillGroup(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'เข้าสู่ระบบ',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                    autofillHints: const ['email'],
-                    onChanged: (value) {
-                      email = value;
-                    },
                   ),
-                ),
-                Container(
-                  width: 400,
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: TextField(
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.key),
-                      labelText: 'Password',
+                  Container(
+                    width: 400,
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.email),
+                        labelText: 'Email',
+                      ),
+                      autofillHints: const [AutofillHints.email],
+                      textInputAction: TextInputAction.next,
+                      onChanged: (value) {
+                        email = value;
+                      },
                     ),
-                    autofillHints: const ['password'],
-                    onChanged: (value) {
-                      password = value;
-                    },
                   ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: signin,
-                  child: const Text('Login'),
-                ),
-                const SizedBox(height: 100),
-              ],
+                  Container(
+                    width: 400,
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: TextField(
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.key),
+                        labelText: 'Password',
+                      ),
+                      autofillHints: const [AutofillHints.password],
+                      textInputAction: TextInputAction.next,
+                      onChanged: (value) {
+                        password = value;
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: signin,
+                    child: const Text('Login'),
+                  ),
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
           ),
         ),

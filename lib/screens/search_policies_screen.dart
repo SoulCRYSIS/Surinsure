@@ -95,151 +95,161 @@ class _SearchPoliciesScreenState extends State<SearchPoliciesScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Form(
-              key: formKey,
-              child: Column(
-                children: [
-                  Text(
-                    'ตัวกรอง',
-                    style: Theme.of(context).textTheme.headline1,
-                  ),
-                  TextInputField(
-                    initialValue: widget.customerId,
-                    width: 200,
-                    label: 'รหัสลูกค้า',
-                    onChanged: (value) => customerId = value!,
-                  ),
-                  spacingVertical,
-                  TextInputField(
-                    initialValue: widget.propertyId,
-                    width: 200,
-                    label: 'รหัสทรัพย์สิน',
-                    onChanged: (value) => propertyId = value!,
-                  ),
-                  spacingVertical,
-                  TextInputField(
-                    width: 200,
-                    label: 'เลขที่กรมธรรม์',
-                    onChanged: (value) => propertyId = value!,
-                  ),
-                  spacingVertical,
-                  SizedBox(
-                    width: 200,
-                    height: 32,
-                    child: DropdownButtonFormField<bool>(
-                      decoration:
-                          const InputDecoration(labelText: 'สถานะการชำระเงิน'),
-                      value: isPaid,
-                      items: const [
-                        DropdownMenuItem(
-                          value: true,
-                          child: Text('ชำระแล้ว'),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 20),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      children: [
+                        Text(
+                          'ตัวกรอง',
+                          style: Theme.of(context).textTheme.headline1,
                         ),
-                        DropdownMenuItem(
-                          value: false,
-                          child: Text('ยังไม่ชำระ'),
+                        TextInputField(
+                          initialValue: widget.customerId,
+                          width: 200,
+                          label: 'รหัสลูกค้า',
+                          onChanged: (value) => customerId = value!,
+                        ),
+                        spacingVertical,
+                        TextInputField(
+                          initialValue: widget.propertyId,
+                          width: 200,
+                          label: 'รหัสทรัพย์สิน',
+                          onChanged: (value) => propertyId = value!,
+                        ),
+                        spacingVertical,
+                        TextInputField(
+                          width: 200,
+                          label: 'เลขที่กรมธรรม์',
+                          onChanged: (value) => propertyId = value!,
+                        ),
+                        spacingVertical,
+                        SizedBox(
+                          width: 200,
+                          height: 32,
+                          child: DropdownButtonFormField<bool>(
+                            decoration: const InputDecoration(
+                                labelText: 'สถานะการชำระเงิน'),
+                            value: isPaid,
+                            items: const [
+                              DropdownMenuItem(
+                                value: true,
+                                child: Text('ชำระแล้ว'),
+                              ),
+                              DropdownMenuItem(
+                                value: false,
+                                child: Text('ยังไม่ชำระ'),
+                              ),
+                            ],
+                            onChanged: (value) => setState(() {
+                              isPaid = value;
+                            }),
+                          ),
+                        ),
+                        spacingVertical,
+                        SizedBox(
+                          width: 200,
+                          height: 32,
+                          child: DropdownButtonFormField(
+                            decoration:
+                                const InputDecoration(labelText: 'ประเภท'),
+                            value: type,
+                            items: PropertyType.values
+                                .map((e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e.thai),
+                                    ))
+                                .toList(),
+                            onChanged: (value) => setState(() {
+                              type = value;
+                            }),
+                          ),
+                        ),
+                        spacingVertical,
+                        DropdownInputField(
+                          items: ServerData.insuranceCompanies,
+                          width: 200,
+                          label: 'บริษัทรับประกัน',
+                          onEditingComplete: (value) => company = value!,
+                        ),
+                        spacingVertical,
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 80,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  formKey.currentState!.reset();
+                                  resetFields();
+                                  setState(() {});
+                                },
+                                child: const Text('ล้าง'),
+                              ),
+                            ),
+                            spacing,
+                            SizedBox(
+                              width: 80,
+                              child: ElevatedButton(
+                                onPressed: search,
+                                child: const Text('ค้นหา'),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
-                      onChanged: (value) => setState(() {
-                        isPaid = value;
-                      }),
                     ),
                   ),
-                  spacingVertical,
-                  SizedBox(
-                    width: 200,
-                    height: 32,
-                    child: DropdownButtonFormField(
-                      decoration: const InputDecoration(labelText: 'ประเภท'),
-                      value: type,
-                      items: PropertyType.values
-                          .map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e.thai),
-                              ))
-                          .toList(),
-                      onChanged: (value) => setState(() {
-                        type = value;
-                      }),
-                    ),
-                  ),
-                  spacingVertical,
-                  DropdownInputField(
-                    items: ServerData.insuranceCompanies,
-                    width: 200,
-                    label: 'บริษัทรับประกัน',
-                    onEditingComplete: (value) => company = value!,
-                  ),
-                  spacingVertical,
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            formKey.currentState!.reset();
-                            resetFields();
-                            setState(() {});
-                          },
-                          child: const Text('ล้าง'),
-                        ),
-                      ),
-                      spacing,
-                      SizedBox(
-                        width: 80,
-                        child: ElevatedButton(
-                          onPressed: search,
-                          child: const Text('ค้นหา'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-            spacing,
-            const VerticalDivider(thickness: 1),
-            spacing,
-            Expanded(
-              child: docs == null
-                  ? Container()
-                  : docs!.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'ไม่พบผลการค้นหา',
-                            style: TextStyle(fontSize: 24, color: Colors.grey),
+              const VerticalDivider(thickness: 1),
+              spacing,
+              Flexible(
+                fit: FlexFit.loose,
+                child: docs == null
+                    ? Container()
+                    : docs!.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'ไม่พบผลการค้นหา',
+                              style:
+                                  TextStyle(fontSize: 24, color: Colors.grey),
+                            ),
+                          )
+                        : SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children:
+                                  (type == null ? PropertyType.values : [type!])
+                                      .map(
+                                (thisType) {
+                                  final thisTypeDocs = docs!
+                                      .where((element) =>
+                                          element.data.type == thisType)
+                                      .toList();
+                                  if (thisTypeDocs.isEmpty) {
+                                    return Container();
+                                  }
+                                  return _Table(
+                                    docs: thisTypeDocs,
+                                    isShowTypeText: type == null,
+                                    type: thisType,
+                                  );
+                                },
+                              ).toList(),
+                            ),
                           ),
-                        )
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children:
-                                (type == null ? PropertyType.values : [type!])
-                                    .map(
-                              (thisType) {
-                                final thisTypeDocs = docs!
-                                    .where((element) =>
-                                        element.data.type == thisType)
-                                    .toList();
-                                if (thisTypeDocs.isEmpty) {
-                                  return Container();
-                                }
-                                return _Table(
-                                  docs: thisTypeDocs,
-                                  isShowTypeText: type == null,
-                                  type: thisType,
-                                );
-                              },
-                            ).toList(),
-                          ),
-                        ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -276,50 +286,47 @@ class __TableState extends State<_Table> {
             style: const TextStyle(
                 fontSize: 20, decoration: TextDecoration.underline),
           ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            showCheckboxColumn: false,
-            sortColumnIndex: sortColumnIndex,
-            sortAscending: sortAscending,
-            columnSpacing: 10,
-            columns: Policy.headers
-                .map(
-                  (e) => DataColumn(
-                    label: Text(e),
-                    onSort: (columnIndex, ascending) => setState(() {
-                      sortColumnIndex = columnIndex;
-                      sortAscending = ascending;
-                      widget.docs.sort(
-                        (a, b) =>
-                            (ascending ? 1 : -1) *
-                            a.data.asTextRow[columnIndex]
-                                .compareTo(b.data.asTextRow[columnIndex]),
-                      );
-                    }),
-                  ),
-                )
-                .toList(),
-            rows: widget.docs
-                .map((doc) => DataRow(
-                      onSelectChanged: (value) {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PolicyFormScreen(
-                                editFrom: doc,
-                                type: doc.data.type,
-                                propertyId: doc.data.propertyId,
-                                customerId: doc.data.customerId,
-                              ),
-                            ));
-                      },
-                      cells: doc.data.asTextRow
-                          .map((e) => DataCell(Text(e)))
-                          .toList(),
-                    ))
-                .toList(),
-          ),
+        DataTable(
+          showCheckboxColumn: false,
+          sortColumnIndex: sortColumnIndex,
+          sortAscending: sortAscending,
+          columnSpacing: 10,
+          columns: Policy.headers
+              .map(
+                (e) => DataColumn(
+                  label: Text(e),
+                  onSort: (columnIndex, ascending) => setState(() {
+                    sortColumnIndex = columnIndex;
+                    sortAscending = ascending;
+                    widget.docs.sort(
+                      (a, b) =>
+                          (ascending ? 1 : -1) *
+                          a.data.asTextRow[columnIndex]
+                              .compareTo(b.data.asTextRow[columnIndex]),
+                    );
+                  }),
+                ),
+              )
+              .toList(),
+          rows: widget.docs
+              .map((doc) => DataRow(
+                    onSelectChanged: (value) {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PolicyFormScreen(
+                              editFrom: doc,
+                              type: doc.data.type,
+                              propertyId: doc.data.propertyId,
+                              customerId: doc.data.customerId,
+                            ),
+                          ));
+                    },
+                    cells: doc.data.asTextRow
+                        .map((e) => DataCell(Text(e)))
+                        .toList(),
+                  ))
+              .toList(),
         ),
         spacingVertical,
       ],
